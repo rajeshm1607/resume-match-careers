@@ -116,7 +116,7 @@ const Sidebar = () => {
                   onClick={() => handleNavigate(item.path)}
                 >
                   <item.icon className="h-5 w-5 mr-3" />
-                  <span>{item.title}</span>
+                  {item.title}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
