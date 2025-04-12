@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { FcGoogle } from "react-icons/fc";
+import { signUp, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -16,33 +17,78 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkUser();
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Mock signup - in a real app, this would call Firebase/Auth0/etc.
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { data, error } = await signUp(email, password);
+      
+      if (error) {
+        toast({
+          title: "Signup failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: data?.user?.email ? 
+            "Please check your email to verify your account." : 
+            "Welcome to JobMatch!",
+        });
+        
+        // If email confirmation is not required, redirect to dashboard
+        if (data?.user && !data?.session) {
+          navigate("/dashboard");
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Account created",
-        description: "Welcome to JobMatch!",
+        title: "Signup error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
       });
-      navigate("/dashboard");
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleSignup = () => {
+  const handleGoogleSignup = async () => {
     setIsLoading(true);
     
-    // Mock Google signup - in a real app, this would use Firebase/Auth0/etc.
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        toast({
+          title: "Google signup failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+      // No need to navigate here as the OAuth redirect will handle it
+    } catch (error) {
       toast({
-        title: "Account created with Google",
-        description: "Welcome to JobMatch!",
+        title: "Signup error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
       });
-      navigate("/dashboard");
-    }, 1000);
+      setIsLoading(false);
+    }
   };
 
   return (
