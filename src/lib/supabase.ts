@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://bbyiwqrtxmkvaowishxp.supabase.co';
@@ -7,8 +8,11 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Auth helpers
 export const signInWithGoogle = async () => {
-  // Use the actual deployed URL instead of window.location.origin
-  const redirectTo = 'https://resume-match-careers.lovable.app/dashboard';
+  // Get the current URL for redirection
+  const origin = window.location.origin;
+  const redirectTo = `${origin}/dashboard`;
+  
+  console.log("Redirect URL:", redirectTo);
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
