@@ -83,10 +83,9 @@ const Sidebar = () => {
             <Briefcase className="w-6 h-6 text-sidebar-foreground" />
             <h1 className="text-xl font-bold text-sidebar-foreground">JobMatch</h1>
           </div>
-          <SidebarTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-sidebar-foreground">
-              <Menu className="h-5 w-5" />
-            </Button>
+          {/* Fix: Removed asChild prop from SidebarTrigger and moved Button inside it */}
+          <SidebarTrigger>
+            <Menu className="h-5 w-5" />
           </SidebarTrigger>
         </div>
       </SidebarHeader>
