@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://bbyiwqrtxmkvaowishxp.supabase.co';
@@ -12,7 +11,10 @@ export const signInWithGoogle = async () => {
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/dashboard`,
-      skipBrowserRedirect: false // Ensure redirect happens
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
     }
   });
   

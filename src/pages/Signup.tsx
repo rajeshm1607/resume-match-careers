@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [googleDisabled, setGoogleDisabled] = useState(false);
   const [providerError, setProviderError] = useState("");
   const navigate = useNavigate();
@@ -31,6 +31,13 @@ const Signup = () => {
     };
     
     checkUser();
+    
+    // Remove any stored auth errors on fresh signup page load
+    if (localStorage.getItem("auth_provider_error")) {
+      localStorage.removeItem("auth_provider_error");
+      setProviderError("");
+      setGoogleDisabled(false);
+    }
   }, [navigate]);
 
   // Check localStorage for previous provider errors
@@ -87,7 +94,7 @@ const Signup = () => {
 
   const handleGoogleSignup = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLoading(true);
+    setGoogleLoading(true);
     
     try {
       const { error } = await signInWithGoogle();
@@ -99,7 +106,7 @@ const Signup = () => {
           
           toast({
             title: "Google signup unavailable",
-            description: "Google signup is not configured. Please sign up with email and password.",
+            description: "Google signup is not properly configured. Please sign up with email and password.",
             variant: "destructive"
           });
           setGoogleDisabled(true);
@@ -111,16 +118,16 @@ const Signup = () => {
             variant: "destructive"
           });
         }
-        setIsLoading(false);
+        setGoogleLoading(false);
       }
-      // No need to navigate here as the OAuth redirect will handle it
+      // If no error, redirect will happen automatically
     } catch (error) {
       toast({
         title: "Signup error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-      setIsLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -209,10 +216,10 @@ const Signup = () => {
                   variant="outline"
                   className="w-full"
                   onClick={handleGoogleSignup}
-                  disabled={isLoading}
+                  disabled={googleLoading}
                 >
                   <FcGoogle className="mr-2 h-5 w-5" />
-                  Google
+                  {googleLoading ? "Connecting to Google..." : "Google"}
                 </Button>
               </>
             )}

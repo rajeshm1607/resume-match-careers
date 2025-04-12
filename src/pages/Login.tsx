@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [googleDisabled, setGoogleDisabled] = useState(false);
   const [providerError, setProviderError] = useState("");
   const navigate = useNavigate();
@@ -30,6 +30,13 @@ const Login = () => {
     };
     
     checkUser();
+    
+    // Remove any stored auth errors on fresh login page load
+    if (localStorage.getItem("auth_provider_error")) {
+      localStorage.removeItem("auth_provider_error");
+      setProviderError("");
+      setGoogleDisabled(false);
+    }
   }, [navigate]);
 
   // Check localStorage for previous provider errors
@@ -80,7 +87,7 @@ const Login = () => {
 
   const handleGoogleLogin = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLoading(true);
+    setGoogleLoading(true);
     
     try {
       const { error } = await signInWithGoogle();
@@ -92,7 +99,7 @@ const Login = () => {
           
           toast({
             title: "Google login unavailable",
-            description: "Google login is not configured. Please sign in with email and password.",
+            description: "Google login is not properly configured. Please sign in with email and password.",
             variant: "destructive"
           });
           setGoogleDisabled(true);
@@ -104,15 +111,16 @@ const Login = () => {
             variant: "destructive"
           });
         }
-        setIsLoading(false);
+        setGoogleLoading(false);
       }
+      // If no error, redirect will happen automatically
     } catch (error) {
       toast({
         title: "Login error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-      setIsLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -195,10 +203,10 @@ const Login = () => {
                   variant="outline"
                   className="w-full"
                   onClick={handleGoogleLogin}
-                  disabled={isLoading}
+                  disabled={googleLoading}
                 >
                   <FcGoogle className="mr-2 h-5 w-5" />
-                  Google
+                  {googleLoading ? "Connecting to Google..." : "Google"}
                 </Button>
               </>
             )}
