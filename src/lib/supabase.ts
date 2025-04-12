@@ -7,10 +7,13 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Auth helpers
 export const signInWithGoogle = async () => {
+  // Use the actual deployed URL instead of window.location.origin
+  const redirectTo = 'https://resume-match-careers.lovable.app/dashboard';
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/dashboard`,
+      redirectTo: redirectTo,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
