@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://bbyiwqrtxmkvaowishxp.supabase.co';
@@ -16,16 +17,15 @@ const getRedirectUrl = () => {
     return `${currentOrigin}/dashboard`;
   } else {
     // For preview/production environments
-    // Make sure we're using the deployed URL
-    const deployedOrigin = currentOrigin;
-    console.log("Using deployed redirect URL:", `${deployedOrigin}/dashboard`);
-    return `${deployedOrigin}/dashboard`;
+    console.log("Using deployed redirect URL:", `${currentOrigin}/dashboard`);
+    return `${currentOrigin}/dashboard`;
   }
 };
 
 // Auth helpers
 export const signInWithGoogle = async () => {
   const redirectTo = getRedirectUrl();
+  console.log("Google sign-in redirect URL:", redirectTo);
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -52,6 +52,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 export const signUp = async (email: string, password: string) => {
   const redirectTo = getRedirectUrl();
+  console.log("Sign-up redirect URL:", redirectTo);
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -76,12 +77,18 @@ export const getCurrentUser = async () => {
 
 // Add function to get session
 export const getSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error('Error getting session:', error);
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error getting session:', error);
+      return null;
+    }
+    console.log("Session check result:", data.session ? "Session exists" : "No session");
+    return data.session;
+  } catch (err) {
+    console.error("Unexpected error getting session:", err);
     return null;
   }
-  return data.session;
 };
 
 // Add listener for auth state changes

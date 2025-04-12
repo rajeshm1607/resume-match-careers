@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { signInWithEmail } from "@/lib/supabase";
+import { signInWithEmail, getSession } from "@/lib/supabase";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -20,22 +20,41 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login with email:", email);
       const { data, error } = await signInWithEmail(email, password);
       
       if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Login failed",
           description: error.message,
           variant: "destructive"
         });
       } else {
+        console.log("Login successful, user data:", data.user ? "User exists" : "No user");
         toast({
           title: "Login successful",
           description: "Welcome back to JobMatch!",
         });
-        navigate("/dashboard");
+        
+        // Double-check we have a valid session before navigating
+        const session = await getSession();
+        console.log("Post-login session check:", session ? "Session exists" : "No session");
+        
+        if (session) {
+          console.log("Navigating to dashboard after successful login");
+          navigate("/dashboard");
+        } else {
+          console.error("Session validation failed after login");
+          toast({
+            title: "Session Error",
+            description: "Unable to establish a session. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
+      console.error("Unexpected login error:", error);
       toast({
         title: "Login error",
         description: "An unexpected error occurred. Please try again.",

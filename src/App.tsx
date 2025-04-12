@@ -16,7 +16,14 @@ import NotFound from "./pages/NotFound";
 import { getSession, supabase } from "./lib/supabase";
 import { useToast } from "./components/ui/use-toast";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -76,7 +83,11 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 
   // Wait for authentication check to complete
   if (isLoading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
