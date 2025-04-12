@@ -13,66 +13,73 @@ import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { getCurrentUser, getSession, supabase } from "./lib/supabase";
+import { getSession, supabase } from "./lib/supabase";
+import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check for hash params in URL
+        setIsLoading(true);
+        
+        // Handle auth hash parameters if present
         if (window.location.hash && window.location.hash.includes('access_token')) {
-          console.log("ProtectedRoute detected auth hash");
-          // Auth hash parameters exist, let Supabase handle them
-          const { data, error } = await supabase.auth.getUser();
-          if (data?.user && !error) {
-            setIsAuthenticated(true);
-            // Clean up URL by removing hash
-            window.history.replaceState(
-              {}, 
-              document.title, 
-              window.location.pathname
-            );
-            return;
-          } else {
-            console.log("Auth hash processing failed:", error);
+          try {
+            // Let Supabase handle the hash parameters 
+            const { data, error } = await supabase.auth.getUser();
+            if (data?.user && !error) {
+              setIsAuthenticated(true);
+              // Clean up URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+              setIsLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error("Error processing auth hash:", error);
           }
         }
         
-        // Try to get current session
+        // Check for active session
         const session = await getSession();
         if (session) {
-          console.log("ProtectedRoute found valid session");
+          console.log("Valid session found");
           setIsAuthenticated(true);
-          return;
+        } else {
+          console.log("No valid session found");
+          setIsAuthenticated(false);
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to access this page",
+          });
         }
-
-        // If we get here, user is not authenticated
-        console.log("ProtectedRoute: No auth detected, redirecting to login");
-        setIsAuthenticated(false);
       } catch (error) {
-        console.error("Auth check error in ProtectedRoute:", error);
+        console.error("Auth check error:", error);
         setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [location.pathname]);
+  }, [location.pathname, toast]);
 
-  if (isAuthenticated === null) {
-    // Still loading, don't render anything yet
+  // Wait for authentication check to complete
+  if (isLoading) {
     return null;
   }
 
   if (!isAuthenticated) {
-    // User is not authenticated, redirect to login
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // User is not authenticated, redirect to login with return path
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // User is authenticated, render the protected component
@@ -80,18 +87,28 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 const App = () => {
-  // Handle initial auth flow
+  // Handle initial auth flow and setup auth event listeners
   useEffect(() => {
-    // This runs once on app initialization
-    const handleInitialAuth = async () => {
-      if (window.location.hash && window.location.hash.includes('access_token')) {
-        // We have auth hash parameters, let Supabase handle them
-        console.log("App detected auth hash parameters");
-        await supabase.auth.getUser();
-      }
-    };
+    // Process initial auth hash if present
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("App detected auth hash parameters");
+      // Let Supabase handle the auth redirect
+      supabase.auth.getSession();
+    }
     
-    handleInitialAuth();
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event);
+      
+      // Reload the session when auth state changes
+      if (event === 'SIGNED_IN') {
+        console.log("User signed in, session:", session);
+      }
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   return (

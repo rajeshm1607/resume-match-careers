@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
 import { getCurrentUser, getSession, supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -14,11 +15,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check for hash params in URL (specific check for Supabase auth hash)
+        // Process auth redirect hash if present
         if (window.location.hash && (
             window.location.hash.includes('access_token') || 
             window.location.hash.includes('error_description')
@@ -28,20 +30,20 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             // Let Supabase handle the auth parameters
             const { data, error } = await supabase.auth.getUser();
             
-            if (data?.user && !error) {
-              console.log("User authenticated from hash params");
-              // Remove the hash to clean the URL
-              window.history.replaceState(
-                {}, 
-                document.title, 
-                window.location.pathname
-              );
-              
-              setLoading(false);
-              return;
-            } else if (error) {
+            if (error) {
               console.error("Auth hash processing error:", error);
+              toast({
+                title: "Authentication Error",
+                description: "Failed to process login information. Please try again.",
+                variant: "destructive"
+              });
               navigate("/login", { replace: true });
+              return;
+            } else if (data?.user) {
+              console.log("User authenticated from hash params");
+              // Clean up the URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+              setLoading(false);
               return;
             }
           } catch (hashError) {
@@ -49,7 +51,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           }
         }
         
-        // If no hash or hash processing failed, check for session
+        // Check for active session
         const session = await getSession();
         if (!session) {
           console.log("No active session found, redirecting to login");
@@ -61,12 +63,34 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         setLoading(false);
       } catch (error) {
         console.error("Authentication check error:", error);
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+          variant: "destructive"
+        });
         navigate("/login", { replace: true });
       }
     };
     
     checkAuth();
-  }, [navigate, location]);
+  }, [navigate, location, toast]);
+
+  // Monitor auth state changes
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          navigate("/login", { replace: true });
+        } else if (event === 'SIGNED_IN' && session) {
+          setLoading(false);
+        }
+      }
+    );
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate]);
   
   if (loading) {
     return (

@@ -8,18 +8,12 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Get the deployed URL or fallback to current origin
 const getRedirectUrl = () => {
-  // Get the actual current URL's origin
+  // Always use the current origin for consistency across environments
   const currentOrigin = window.location.origin;
   
-  // Prevent localhost redirects in production
-  if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
-    console.log("Local development detected, using current origin for redirect");
-    return `${currentOrigin}/dashboard`;
-  }
-  
-  // For deployed environments, use the current origin
+  // Build the redirect URL with the dashboard path
   const redirectTo = `${currentOrigin}/dashboard`;
-  console.log("Redirect URL:", redirectTo);
+  console.log("Auth redirect URL:", redirectTo);
   return redirectTo;
 };
 
