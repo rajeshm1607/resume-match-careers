@@ -33,10 +33,12 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
         
         // Handle auth hash parameters if present
         if (window.location.hash && window.location.hash.includes('access_token')) {
+          console.log("App detected auth hash parameters in ProtectedRoute");
           try {
             // Let Supabase handle the hash parameters 
             const { data, error } = await supabase.auth.getUser();
             if (data?.user && !error) {
+              console.log("User authenticated via hash in ProtectedRoute");
               setIsAuthenticated(true);
               // Clean up URL
               window.history.replaceState({}, document.title, window.location.pathname);
@@ -51,10 +53,10 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
         // Check for active session
         const session = await getSession();
         if (session) {
-          console.log("Valid session found");
+          console.log("Valid session found in ProtectedRoute");
           setIsAuthenticated(true);
         } else {
-          console.log("No valid session found");
+          console.log("No valid session found in ProtectedRoute");
           setIsAuthenticated(false);
           toast({
             title: "Authentication Required",
@@ -89,20 +91,32 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 const App = () => {
   // Handle initial auth flow and setup auth event listeners
   useEffect(() => {
-    // Process initial auth hash if present
-    if (window.location.hash && window.location.hash.includes('access_token')) {
-      console.log("App detected auth hash parameters");
-      // Let Supabase handle the auth redirect
-      supabase.auth.getSession();
-    }
+    // Check and handle auth hash on initial load
+    const handleInitialAuthState = async () => {
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        console.log("App detected auth hash parameters on initial load");
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          console.log("Initial session check:", data?.session ? "Session exists" : "No session", error ? `Error: ${error.message}` : "No error");
+        } catch (err) {
+          console.error("Error checking initial session:", err);
+        }
+      }
+    };
+    
+    handleInitialAuthState();
     
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change:", event);
       
-      // Reload the session when auth state changes
       if (event === 'SIGNED_IN') {
-        console.log("User signed in, session:", session);
+        console.log("User signed in, session:", session ? "Session exists" : "No session");
+        
+        // If we have auth parameters in URL, clean them up
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
     });
     

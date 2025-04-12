@@ -25,7 +25,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             window.location.hash.includes('access_token') || 
             window.location.hash.includes('error_description')
         )) {
-          console.log("Auth hash parameters detected");
+          console.log("Auth hash parameters detected in MainLayout");
           try {
             // Let Supabase handle the auth parameters
             const { data, error } = await supabase.auth.getUser();
@@ -59,7 +59,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           return;
         }
         
-        console.log("Valid session found");
+        console.log("Valid session found in MainLayout");
         setLoading(false);
       } catch (error) {
         console.error("Authentication check error:", error);
