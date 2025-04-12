@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { FcGoogle } from "react-icons/fc";
 import { signUp, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -14,6 +17,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [googleDisabled, setGoogleDisabled] = useState(false);
+  const [providerError, setProviderError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,6 +32,15 @@ const Signup = () => {
     
     checkUser();
   }, [navigate]);
+
+  // Check localStorage for previous provider errors
+  useEffect(() => {
+    const savedProviderError = localStorage.getItem("auth_provider_error");
+    if (savedProviderError === "google") {
+      setGoogleDisabled(true);
+      setProviderError("Google signup is not available. Please create an account with email and password.");
+    }
+  }, []);
 
   // Ensure event propagation is stopped for button clicks
   const handleButtonClick = (e: React.MouseEvent) => {
@@ -80,14 +93,17 @@ const Signup = () => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        // Check for the specific provider not enabled error
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
+          // Save to localStorage to persist across pages
+          localStorage.setItem("auth_provider_error", "google");
+          
           toast({
             title: "Google signup unavailable",
-            description: "Google signup is not configured. Please sign up with email and password or contact support.",
+            description: "Google signup is not configured. Please sign up with email and password.",
             variant: "destructive"
           });
           setGoogleDisabled(true);
+          setProviderError("Google signup is not available. Please create an account with email and password.");
         } else {
           toast({
             title: "Google signup failed",
@@ -125,6 +141,15 @@ const Signup = () => {
             <CardDescription>Sign up to access JobMatch</CardDescription>
           </CardHeader>
           <CardContent>
+            {providerError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {providerError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>

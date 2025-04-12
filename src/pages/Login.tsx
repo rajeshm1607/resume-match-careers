@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,12 +8,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { FcGoogle } from "react-icons/fc";
 import { signInWithEmail, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [googleDisabled, setGoogleDisabled] = useState(false);
+  const [providerError, setProviderError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -27,6 +31,15 @@ const Login = () => {
     
     checkUser();
   }, [navigate]);
+
+  // Check localStorage for previous provider errors
+  useEffect(() => {
+    const savedProviderError = localStorage.getItem("auth_provider_error");
+    if (savedProviderError === "google") {
+      setGoogleDisabled(true);
+      setProviderError("Google login is not available. Please sign in with email and password.");
+    }
+  }, []);
 
   // Ensure event propagation is stopped for button clicks
   const handleButtonClick = (e: React.MouseEvent) => {
@@ -74,12 +87,16 @@ const Login = () => {
       
       if (error) {
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
+          // Save to localStorage to persist across pages
+          localStorage.setItem("auth_provider_error", "google");
+          
           toast({
             title: "Google login unavailable",
-            description: "Google login is not configured. Please sign in with email and password or contact support.",
+            description: "Google login is not configured. Please sign in with email and password.",
             variant: "destructive"
           });
           setGoogleDisabled(true);
+          setProviderError("Google login is not available. Please sign in with email and password.");
         } else {
           toast({
             title: "Google login failed",
@@ -116,6 +133,15 @@ const Login = () => {
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
+            {providerError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {providerError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
