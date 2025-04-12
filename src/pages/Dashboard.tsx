@@ -29,10 +29,14 @@ import {
   MapPin,
   BarChart2,
   FileText,
-  Bell
+  Bell,
+  Loader2
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
-import { useEffect, MouseEvent } from "react";
+import { useEffect, useState, MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase, getCurrentUser } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 const applicationStats = [
   { name: 'Applied', value: 12 },
@@ -103,9 +107,78 @@ const recentApplications = [
 const COLORS = ['#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
 
 const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const handleButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setLoading(true);
+        
+        if (window.location.hash) {
+          const hashParams = new URLSearchParams(
+            window.location.hash.substring(1)
+          );
+          if (hashParams.has("access_token")) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        }
+        
+        const user = await getCurrentUser();
+        if (!user) {
+          console.log("No authenticated user found, redirecting to login");
+          navigate("/login");
+          return;
+        }
+        
+        console.log("User authenticated:", user);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Authentication error:", error);
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+          variant: "destructive"
+        });
+        navigate("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate, toast]);
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          navigate("/login");
+        }
+      }
+    );
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const reinitializeButtons = () => {

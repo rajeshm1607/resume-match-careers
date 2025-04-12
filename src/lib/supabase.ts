@@ -6,13 +6,18 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Auth helpers
-export const signInWithGoogle = async () => {
+// Get the deployed URL or fallback to current origin
+const getRedirectUrl = () => {
   // Get the current URL for redirection
   const origin = window.location.origin;
   const redirectTo = `${origin}/dashboard`;
-  
   console.log("Redirect URL:", redirectTo);
+  return redirectTo;
+};
+
+// Auth helpers
+export const signInWithGoogle = async () => {
+  const redirectTo = getRedirectUrl();
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -38,11 +43,13 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signUp = async (email: string, password: string) => {
+  const redirectTo = getRedirectUrl();
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/dashboard`
+      emailRedirectTo: redirectTo
     }
   });
   
@@ -57,4 +64,19 @@ export const signOut = async () => {
 export const getCurrentUser = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
+};
+
+// Add function to get session
+export const getSession = async () => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
+  return data.session;
+};
+
+// Add listener for auth state changes
+export const setupAuthListener = (callback: (event: string, session: any) => void) => {
+  return supabase.auth.onAuthStateChange(callback);
 };
