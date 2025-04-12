@@ -6,15 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
-import Login from "./pages/Login.jsx";
+import Login from "./pages/Login.js";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
-import Settings from "./pages/Settings.jsx";
-import NotFound from "./pages/NotFound.jsx";
+import Settings from "./pages/Settings.js";
+import NotFound from "./pages/NotFound.js";
 import { getSession, supabase } from "./lib/supabase";
-import { useToast } from "./components/ui/use-toast.jsx";
+import { useToast } from "./components/ui/use-toast.js";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,8 +25,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+const ProtectedRoute = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
