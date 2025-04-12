@@ -20,6 +20,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setLoading(true);
+        
         // Process auth redirect hash if present
         if (window.location.hash && (
             window.location.hash.includes('access_token') || 
@@ -27,7 +29,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         )) {
           console.log("Auth hash parameters detected in MainLayout");
           try {
-            // Let Supabase handle the auth parameters
             const { data, error } = await supabase.auth.getUser();
             
             if (error) {
@@ -69,6 +70,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           variant: "destructive"
         });
         navigate("/login", { replace: true });
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -81,8 +84,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       (event, session) => {
         if (event === 'SIGNED_OUT') {
           navigate("/login", { replace: true });
-        } else if (event === 'SIGNED_IN' && session) {
-          setLoading(false);
         }
       }
     );
