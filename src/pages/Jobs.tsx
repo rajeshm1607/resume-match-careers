@@ -34,16 +34,19 @@ const Jobs = () => {
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
   const { toast } = useToast();
   
-  // Fetch resume data
+  // Fetch resume data - fixed to use the correct structure for useQuery
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
-    onSuccess: (data) => {
-      if (data && data.skills) {
-        setResumeSkills(data.skills);
-      }
-    }
+    // Remove the onSuccess callback and use useEffect instead
   });
+
+  // Use useEffect to handle the successful data fetch
+  useEffect(() => {
+    if (resumeQuery.data && resumeQuery.data.skills) {
+      setResumeSkills(resumeQuery.data.skills);
+    }
+  }, [resumeQuery.data]);
 
   // Fetch jobs based on search query, filters, and resume skills
   const jobsQuery = useQuery({
