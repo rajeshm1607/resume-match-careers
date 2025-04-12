@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleDisabled, setGoogleDisabled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -80,11 +80,21 @@ const Signup = () => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        toast({
-          title: "Google signup failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        // Check for the specific provider not enabled error
+        if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
+          toast({
+            title: "Google signup unavailable",
+            description: "Google signup is not configured. Please sign up with email and password or contact support.",
+            variant: "destructive"
+          });
+          setGoogleDisabled(true);
+        } else {
+          toast({
+            title: "Google signup failed",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
         setIsLoading(false);
       }
       // No need to navigate here as the OAuth redirect will handle it
@@ -159,24 +169,28 @@ const Signup = () => {
               </Button>
             </form>
             
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignup}
-              disabled={isLoading}
-            >
-              <FcGoogle className="mr-2 h-5 w-5" />
-              Google
-            </Button>
+            {!googleDisabled && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleSignup}
+                  disabled={isLoading}
+                >
+                  <FcGoogle className="mr-2 h-5 w-5" />
+                  Google
+                </Button>
+              </>
+            )}
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-gray-600">
