@@ -1,4 +1,3 @@
-
 import { 
   Card, 
   CardContent, 
@@ -28,14 +27,13 @@ import {
   Calendar,
   Clock,
   MapPin,
-  AlertCircle,
   BarChart2,
   FileText,
   Bell
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
+import { useEffect, MouseEvent } from "react";
 
-// Mock data
 const applicationStats = [
   { name: 'Applied', value: 12 },
   { name: 'Interview', value: 5 },
@@ -105,6 +103,24 @@ const recentApplications = [
 const COLORS = ['#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
 
 const Dashboard = () => {
+  const handleButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+  };
+
+  useEffect(() => {
+    const reinitializeButtons = () => {
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode?.replaceChild(newButton, button);
+      });
+    };
+    
+    const timeoutId = setTimeout(reinitializeButtons, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
@@ -114,11 +130,11 @@ const Dashboard = () => {
             <p className="text-gray-600">Track your job applications and interviews</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleButtonClick}>
               <Bell className="h-4 w-4 mr-2" />
               Notifications
             </Button>
-            <Button>
+            <Button onClick={handleButtonClick}>
               <FileText className="h-4 w-4 mr-2" />
               Update Resume
             </Button>
@@ -175,7 +191,7 @@ const Dashboard = () => {
                   <TabsTrigger value="stats">Application Stats</TabsTrigger>
                   <TabsTrigger value="activity">Weekly Activity</TabsTrigger>
                 </TabsList>
-                <Button variant="ghost" size="sm" className="text-xs">
+                <Button variant="ghost" size="sm" className="text-xs" onClick={handleButtonClick}>
                   <BarChart2 className="h-4 w-4 mr-1" />
                   View All Reports
                 </Button>
@@ -299,7 +315,7 @@ const Dashboard = () => {
               </CardContent>
               
               <CardFooter>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleButtonClick}>
                   View Calendar
                 </Button>
               </CardFooter>
@@ -349,7 +365,7 @@ const Dashboard = () => {
             </CardContent>
             
             <CardFooter className="flex justify-center">
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleButtonClick}>
                 View All Applications
               </Button>
             </CardFooter>
