@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,106 +20,86 @@ import {
   Search,
   BookmarkPlus,
   Filter,
+  ExternalLink,
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
-
-// Mock job data
-const mockJobs = [
-  {
-    id: 1,
-    title: "Frontend Developer",
-    company: "TechCorp",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    match: 95,
-    salary: "$90,000 - $120,000",
-    postedAt: "2 days ago",
-    logo: "TC",
-    skills: ["React", "TypeScript", "Tailwind CSS"]
-  },
-  {
-    id: 2,
-    title: "UX/UI Designer",
-    company: "DesignStudio",
-    location: "Remote",
-    type: "Full-time",
-    match: 88,
-    salary: "$80,000 - $110,000",
-    postedAt: "1 day ago",
-    logo: "DS",
-    skills: ["Figma", "UI Design", "Prototyping"]
-  },
-  {
-    id: 3,
-    title: "Product Manager",
-    company: "ProductLabs",
-    location: "New York, NY",
-    type: "Full-time",
-    match: 82,
-    salary: "$100,000 - $140,000",
-    postedAt: "5 days ago",
-    logo: "PL",
-    skills: ["Product Strategy", "Agile", "Market Analysis"]
-  },
-  {
-    id: 4,
-    title: "Full Stack Developer",
-    company: "WebSolutions",
-    location: "Chicago, IL",
-    type: "Contract",
-    match: 75,
-    salary: "$70 - $90 / hour",
-    postedAt: "1 week ago",
-    logo: "WS",
-    skills: ["React", "Node.js", "MongoDB"]
-  },
-  {
-    id: 5,
-    title: "Frontend Engineer",
-    company: "StartupX",
-    location: "Remote",
-    type: "Full-time",
-    match: 71,
-    salary: "$85,000 - $115,000",
-    postedAt: "3 days ago",
-    logo: "SX",
-    skills: ["JavaScript", "React", "Redux"]
-  }
-];
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Job, searchJobs, saveJob, applyToJob } from "@/services/jobService";
+import { getLatestParsedResume, ParsedResume } from "@/services/resumeService";
 
 const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
+  const [resumeSkills, setResumeSkills] = useState<string[]>([]);
   const { toast } = useToast();
   
-  // Filter jobs based on search and filters
-  const filteredJobs = mockJobs
-    .filter(job => 
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .filter(job => filterType === "all" || job.type.toLowerCase() === filterType.toLowerCase())
-    .filter(job => filterLocation === "all" || 
-      (filterLocation === "remote" && job.location.toLowerCase() === "remote") ||
-      (filterLocation === "onsite" && job.location.toLowerCase() !== "remote")
-    )
-    .sort((a, b) => b.match - a.match);
+  // Fetch resume data
+  const resumeQuery = useQuery({
+    queryKey: ['resume'],
+    queryFn: () => getLatestParsedResume(),
+    onSuccess: (data) => {
+      if (data && data.skills) {
+        setResumeSkills(data.skills);
+      }
+    }
+  });
+
+  // Fetch jobs based on search query, filters, and resume skills
+  const jobsQuery = useQuery({
+    queryKey: ['jobs', searchQuery, filterType, filterLocation, resumeSkills],
+    queryFn: () => searchJobs(searchQuery, { type: filterType, location: filterLocation }, resumeSkills),
+    enabled: true,
+  });
+
+  // Save job mutation
+  const saveMutation = useMutation({
+    mutationFn: saveJob,
+    onSuccess: () => {
+      toast({
+        title: "Job saved",
+        description: "This job has been added to your saved jobs.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save this job. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Apply to job mutation
+  const applyMutation = useMutation({
+    mutationFn: applyToJob,
+    onSuccess: () => {
+      toast({
+        title: "Application started",
+        description: "You can complete your application now.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start application. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleSaveJob = (jobId: number) => {
-    toast({
-      title: "Job saved",
-      description: "This job has been added to your saved jobs.",
-    });
+    saveMutation.mutate(jobId);
   };
 
   const handleApplyJob = (jobId: number) => {
-    toast({
-      title: "Application started",
-      description: "You can complete your application now.",
-    });
+    applyMutation.mutate(jobId);
   };
+
+  const filteredJobs = jobsQuery.data || [];
+  const isLoading = jobsQuery.isLoading || resumeQuery.isLoading;
+  const isError = jobsQuery.isError || resumeQuery.isError;
+  const resume = resumeQuery.data;
 
   return (
     <MainLayout>
@@ -127,6 +107,9 @@ const Jobs = () => {
         <h1 className="text-2xl font-bold mb-2">Job Recommendations</h1>
         <p className="text-gray-600 mb-6">
           Jobs are ranked by match with your resume skills and experience
+          {resume?.skills && resume.skills.length > 0 && (
+            <span className="text-green-600"> - Using {resume.skills.length} skills from your resume!</span>
+          )}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-6">
@@ -167,7 +150,15 @@ const Jobs = () => {
               </div>
             </div>
             
-            {filteredJobs.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : isError ? (
+              <div className="text-center py-10 bg-red-50 rounded-lg">
+                <p className="text-red-500">Failed to load jobs. Please try again.</p>
+              </div>
+            ) : filteredJobs.length > 0 ? (
               <div className="space-y-4">
                 {filteredJobs.map((job) => (
                   <Card key={job.id} className="overflow-hidden">
@@ -178,7 +169,12 @@ const Jobs = () => {
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <h3 className="text-lg font-medium">{job.title}</h3>
-                          <div>
+                          <div className="flex items-center gap-2">
+                            {job.source && (
+                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {job.source}
+                              </span>
+                            )}
                             <span className="inline-flex items-center bg-job-match-bg text-job-match px-2.5 py-0.5 rounded-full text-sm font-medium">
                               {job.match}% Match
                             </span>
@@ -206,7 +202,10 @@ const Jobs = () => {
                         </div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {job.skills.map((skill) => (
-                            <Badge key={skill} variant="outline">
+                            <Badge 
+                              key={skill} 
+                              variant={resumeSkills.includes(skill) ? "default" : "outline"}
+                            >
                               {skill}
                             </Badge>
                           ))}
@@ -225,6 +224,16 @@ const Jobs = () => {
                     </div>
                     
                     <CardFooter className="flex justify-end gap-3 bg-secondary/50 py-3">
+                      {job.url && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(job.url, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      )}
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -269,28 +278,38 @@ const Jobs = () => {
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Top Matching Skills</h4>
+                  <h4 className="text-sm font-medium mb-2">Top Skills from Resume</h4>
                   <div className="space-y-2">
-                    {["React", "JavaScript", "TypeScript"].map((skill) => (
-                      <div key={skill} className="flex items-center justify-between">
-                        <span className="text-sm">{skill}</span>
-                        <span className="text-xs text-green-600 font-medium">+15%</span>
-                      </div>
-                    ))}
+                    {resumeQuery.isLoading ? (
+                      <div className="text-sm text-gray-400">Loading skills...</div>
+                    ) : resume?.skills ? (
+                      resume.skills.slice(0, 5).map((skill) => (
+                        <div key={skill} className="flex items-center justify-between">
+                          <span className="text-sm">{skill}</span>
+                          <span className="text-xs text-green-600 font-medium">+15%</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-400">No resume uploaded</div>
+                    )}
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Skills to Improve</h4>
-                  <div className="space-y-2">
-                    {["Next.js", "GraphQL", "Cypress"].map((skill) => (
-                      <div key={skill} className="flex items-center justify-between">
-                        <span className="text-sm">{skill}</span>
-                        <span className="text-xs text-amber-600 font-medium">+5%</span>
-                      </div>
-                    ))}
+                {resume && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Top Job Sources</h4>
+                    <div className="space-y-2">
+                      {['LinkedIn', 'Indeed', 'Monster'].map((source) => (
+                        <div key={source} className="flex items-center justify-between">
+                          <span className="text-sm">{source}</span>
+                          <span className="text-xs text-amber-600 font-medium">
+                            {source === 'LinkedIn' ? '65%' : source === 'Indeed' ? '25%' : '10%'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
             

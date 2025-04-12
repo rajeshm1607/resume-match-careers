@@ -21,17 +21,52 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Upload, FileText, Check, X } from "lucide-react";
+import { Upload, FileText, Check, X, Loader2 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
+import { uploadAndParseResume, ParsedResume } from "@/services/resumeService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getLatestParsedResume } from "@/services/resumeService";
 
 const Resume = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [resumeUploaded, setResumeUploaded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // Fetch the latest resume data
+  const resumeQuery = useQuery({
+    queryKey: ['resume'],
+    queryFn: () => getLatestParsedResume(),
+  });
+
+  // Mutation for uploading and parsing resume
+  const uploadMutation = useMutation({
+    mutationFn: uploadAndParseResume,
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Resume uploaded successfully",
+          description: "Your resume has been analyzed for job matching",
+        });
+        queryClient.invalidateQueries({ queryKey: ['resume'] });
+      } else {
+        toast({
+          title: "Upload failed",
+          description: data.error || "An error occurred while uploading your resume",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload error",
+        description: "Failed to upload your resume",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -70,23 +105,14 @@ const Resume = () => {
 
   const handleFileUpload = (selectedFile: File) => {
     setFile(selectedFile);
-    setIsUploading(true);
-    
-    // Mock file upload and parsing - in a real app, this would call a backend API
-    setTimeout(() => {
-      setIsUploading(false);
-      setResumeUploaded(true);
-      toast({
-        title: "Resume uploaded successfully",
-        description: "Your resume has been analyzed for job matching",
-      });
-    }, 2000);
+    uploadMutation.mutate(selectedFile);
   };
 
   const handleDeleteResume = () => {
-    setResumeUploaded(false);
+    // In a real app, you would delete the resume from Supabase here
     setFile(null);
     setShowDeleteConfirm(false);
+    queryClient.setQueryData(['resume'], null);
     toast({
       title: "Resume deleted",
       description: "Your resume has been removed",
@@ -97,13 +123,24 @@ const Resume = () => {
     navigate("/jobs");
   };
 
+  const isUploading = uploadMutation.isPending;
+  const resumeData = resumeQuery.data;
+  const resumeUploaded = !!resumeData;
+  const isLoading = resumeQuery.isLoading;
+
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Resume Management</h1>
         
         <div className="grid gap-6">
-          {!resumeUploaded ? (
+          {isLoading ? (
+            <Card>
+              <CardContent className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </CardContent>
+            </Card>
+          ) : !resumeUploaded ? (
             <Card>
               <CardHeader>
                 <CardTitle>Upload Your Resume</CardTitle>
@@ -135,7 +172,7 @@ const Resume = () => {
                       accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       onChange={handleFileChange}
                     />
-                    <Button asChild>
+                    <Button asChild disabled={isUploading}>
                       <label htmlFor="resume-upload">Select File</label>
                     </Button>
                   </div>
@@ -160,9 +197,9 @@ const Resume = () => {
                 <div className="flex items-center gap-4 p-4 bg-secondary rounded-lg">
                   <FileText className="h-10 w-10 text-primary" />
                   <div className="flex-1">
-                    <h3 className="font-medium">{file?.name}</h3>
+                    <h3 className="font-medium">{file?.name || "Uploaded Resume"}</h3>
                     <p className="text-sm text-gray-500">
-                      {file && new Date().toLocaleDateString()}
+                      {new Date().toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
@@ -174,16 +211,34 @@ const Resume = () => {
                 <div className="mt-6">
                   <h3 className="text-lg font-medium mb-4">Skills Detected</h3>
                   <div className="flex flex-wrap gap-2">
-                    {["JavaScript", "React", "TypeScript", "UI/UX Design", "Project Management", "Agile", "Communication"].map((skill) => (
+                    {resumeData?.skills?.map((skill) => (
                       <span 
                         key={skill} 
                         className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
                       >
                         {skill}
                       </span>
-                    ))}
+                    )) || (
+                      <span className="text-gray-500">No skills detected</span>
+                    )}
                   </div>
                 </div>
+
+                {resumeData?.experience && resumeData.experience.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-4">Experience Detected</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {resumeData.experience.map((exp) => (
+                        <span 
+                          key={exp} 
+                          className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                        >
+                          {exp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button onClick={handleViewJobs} className="w-full">
