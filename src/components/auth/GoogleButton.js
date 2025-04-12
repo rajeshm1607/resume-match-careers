@@ -5,15 +5,11 @@ import { FcGoogle } from "react-icons/fc";
 import { useToast } from "@/components/ui/use-toast";
 import { signInWithGoogle } from "@/lib/supabase";
 
-interface GoogleButtonProps {
-  onGoogleLoginError: (message: string) => void;
-}
-
-const GoogleButton = ({ onGoogleLoginError }: GoogleButtonProps) => {
+const GoogleButton = ({ onGoogleLoginError }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleGoogleLogin = async (e: React.MouseEvent) => {
+  const handleGoogleLogin = async (e) => {
     e.stopPropagation();
     setGoogleLoading(true);
     

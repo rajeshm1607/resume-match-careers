@@ -46,7 +46,7 @@ const Login = () => {
     }
   }, []);
 
-  const handleGoogleLoginError = (message: string) => {
+  const handleGoogleLoginError = (message) => {
     setGoogleDisabled(true);
     setProviderError(message);
   };

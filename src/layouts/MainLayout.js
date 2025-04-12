@@ -7,11 +7,7 @@ import { Loader2 } from "lucide-react";
 import { getCurrentUser, getSession, supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
-interface MainLayoutProps {
-  children: ReactNode;
-}
-
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();

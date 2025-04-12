@@ -2,11 +2,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
-interface AuthErrorProps {
-  message: string;
-}
-
-const AuthError = ({ message }: AuthErrorProps) => {
+const AuthError = ({ message }) => {
   if (!message) return null;
   
   return (

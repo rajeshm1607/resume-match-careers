@@ -1,13 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 
-interface AuthFooterProps {
-  message: string;
-  linkText: string;
-  linkPath: string;
-}
-
-const AuthFooter = ({ message, linkText, linkPath }: AuthFooterProps) => {
+const AuthFooter = ({ message, linkText, linkPath }) => {
   const navigate = useNavigate();
   
   return (

@@ -41,7 +41,7 @@ export const signInWithGoogle = async () => {
   return { data, error };
 };
 
-export const signInWithEmail = async (email: string, password: string) => {
+export const signInWithEmail = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -50,7 +50,7 @@ export const signInWithEmail = async (email: string, password: string) => {
   return { data, error };
 };
 
-export const signUp = async (email: string, password: string) => {
+export const signUp = async (email, password) => {
   const redirectTo = getRedirectUrl();
   console.log("Sign-up redirect URL:", redirectTo);
   
@@ -92,6 +92,6 @@ export const getSession = async () => {
 };
 
 // Add listener for auth state changes
-export const setupAuthListener = (callback: (event: string, session: any) => void) => {
+export const setupAuthListener = (callback) => {
   return supabase.auth.onAuthStateChange(callback);
 };

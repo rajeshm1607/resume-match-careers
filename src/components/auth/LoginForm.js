@@ -14,7 +14,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsLoading(true);
@@ -66,7 +66,7 @@ const LoginForm = () => {
   };
 
   // Ensure event propagation is stopped for button clicks
-  const handleButtonClick = (e: React.MouseEvent) => {
+  const handleButtonClick = (e) => {
     e.stopPropagation();
   };
 
