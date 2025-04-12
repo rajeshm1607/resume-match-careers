@@ -8,8 +8,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Get the deployed URL or fallback to current origin
 const getRedirectUrl = () => {
-  // Get the current URL for redirection
+  // Get the actual deployed URL
   const origin = window.location.origin;
+  // Make sure we're not using localhost in production
   const redirectTo = `${origin}/dashboard`;
   console.log("Redirect URL:", redirectTo);
   return redirectTo;

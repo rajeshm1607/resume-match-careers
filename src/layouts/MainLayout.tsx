@@ -1,10 +1,10 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
-import { getCurrentUser } from "@/lib/supabase";
+import { getCurrentUser, getSession, supabase } from "@/lib/supabase";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -13,25 +13,39 @@ interface MainLayoutProps {
 const MainLayout = ({ children }: MainLayoutProps) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = await getCurrentUser();
-        if (!user) {
-          navigate("/login");
+        // First check for hash params in URL
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          // Auth hash parameters exist, let Supabase handle them
+          const { data, error } = await supabase.auth.getUser();
+          if (data?.user && !error) {
+            // Clean up URL by removing hash
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Try to get current session
+        const session = await getSession();
+        if (!session) {
+          navigate("/login", { replace: true });
           return;
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error("Authentication check error:", error);
-        navigate("/login");
-      } finally {
-        setLoading(false);
+        navigate("/login", { replace: true });
       }
     };
     
     checkAuth();
-  }, [navigate]);
+  }, [navigate, location]);
   
   if (loading) {
     return (
