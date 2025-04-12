@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,15 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
+import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
-import Settings from "./pages/Settings";
+import Settings from "./pages/Settings.jsx";
 import NotFound from "./pages/NotFound";
 import { getSession, supabase } from "./lib/supabase";
-import { useToast } from "./components/ui/use-toast";
+import { useToast } from "./components/ui/use-toast.jsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +24,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,16 +36,13 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
       try {
         setIsLoading(true);
         
-        // Handle auth hash parameters if present
         if (window.location.hash && window.location.hash.includes('access_token')) {
           console.log("App detected auth hash parameters in ProtectedRoute");
           try {
-            // Let Supabase handle the hash parameters 
             const { data, error } = await supabase.auth.getUser();
             if (data?.user && !error) {
               console.log("User authenticated via hash in ProtectedRoute");
               setIsAuthenticated(true);
-              // Clean up URL
               window.history.replaceState({}, document.title, window.location.pathname);
               setIsLoading(false);
               return;
@@ -57,7 +52,6 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
           }
         }
         
-        // Check for active session
         const session = await getSession();
         if (session) {
           console.log("Valid session found in ProtectedRoute");
@@ -81,7 +75,6 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     checkAuth();
   }, [location.pathname, toast]);
 
-  // Wait for authentication check to complete
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -91,18 +84,14 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   }
 
   if (!isAuthenticated) {
-    // User is not authenticated, redirect to login with return path
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // User is authenticated, render the protected component
   return children;
 };
 
 const App = () => {
-  // Handle initial auth flow and setup auth event listeners
   useEffect(() => {
-    // Check and handle auth hash on initial load
     const handleInitialAuthState = async () => {
       if (window.location.hash && window.location.hash.includes('access_token')) {
         console.log("App detected auth hash parameters on initial load");
@@ -117,14 +106,12 @@ const App = () => {
     
     handleInitialAuthState();
     
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change:", event);
       
       if (event === 'SIGNED_IN') {
         console.log("User signed in, session:", session ? "Session exists" : "No session");
         
-        // If we have auth parameters in URL, clean them up
         if (window.location.hash && window.location.hash.includes('access_token')) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
