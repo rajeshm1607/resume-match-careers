@@ -26,34 +26,44 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await getSession();
-        if (session) {
-          setIsAuthenticated(true);
-          return;
-        }
-
-        // Check hash params for auth response
+        // First check for hash params in URL
         if (window.location.hash && window.location.hash.includes('access_token')) {
+          console.log("ProtectedRoute detected auth hash");
           // Auth hash parameters exist, let Supabase handle them
           const { data, error } = await supabase.auth.getUser();
           if (data?.user && !error) {
             setIsAuthenticated(true);
             // Clean up URL by removing hash
-            window.history.replaceState({}, document.title, window.location.pathname);
+            window.history.replaceState(
+              {}, 
+              document.title, 
+              window.location.pathname
+            );
             return;
+          } else {
+            console.log("Auth hash processing failed:", error);
           }
+        }
+        
+        // Try to get current session
+        const session = await getSession();
+        if (session) {
+          console.log("ProtectedRoute found valid session");
+          setIsAuthenticated(true);
+          return;
         }
 
         // If we get here, user is not authenticated
+        console.log("ProtectedRoute: No auth detected, redirecting to login");
         setIsAuthenticated(false);
       } catch (error) {
-        console.error("Auth check error:", error);
+        console.error("Auth check error in ProtectedRoute:", error);
         setIsAuthenticated(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
   if (isAuthenticated === null) {
     // Still loading, don't render anything yet
@@ -76,6 +86,7 @@ const App = () => {
     const handleInitialAuth = async () => {
       if (window.location.hash && window.location.hash.includes('access_token')) {
         // We have auth hash parameters, let Supabase handle them
+        console.log("App detected auth hash parameters");
         await supabase.auth.getUser();
       }
     };

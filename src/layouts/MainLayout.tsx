@@ -18,25 +18,46 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check for hash params in URL
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-          // Auth hash parameters exist, let Supabase handle them
-          const { data, error } = await supabase.auth.getUser();
-          if (data?.user && !error) {
-            // Clean up URL by removing hash
-            window.history.replaceState({}, document.title, window.location.pathname);
-            setLoading(false);
-            return;
+        // First check for hash params in URL (specific check for Supabase auth hash)
+        if (window.location.hash && (
+            window.location.hash.includes('access_token') || 
+            window.location.hash.includes('error_description')
+        )) {
+          console.log("Auth hash parameters detected");
+          try {
+            // Let Supabase handle the auth parameters
+            const { data, error } = await supabase.auth.getUser();
+            
+            if (data?.user && !error) {
+              console.log("User authenticated from hash params");
+              // Remove the hash to clean the URL
+              window.history.replaceState(
+                {}, 
+                document.title, 
+                window.location.pathname
+              );
+              
+              setLoading(false);
+              return;
+            } else if (error) {
+              console.error("Auth hash processing error:", error);
+              navigate("/login", { replace: true });
+              return;
+            }
+          } catch (hashError) {
+            console.error("Error processing auth hash:", hashError);
           }
         }
         
-        // Try to get current session
+        // If no hash or hash processing failed, check for session
         const session = await getSession();
         if (!session) {
+          console.log("No active session found, redirecting to login");
           navigate("/login", { replace: true });
           return;
         }
         
+        console.log("Valid session found");
         setLoading(false);
       } catch (error) {
         console.error("Authentication check error:", error);
