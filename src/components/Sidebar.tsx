@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -22,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser, signOut } from "@/lib/supabase";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -29,27 +29,62 @@ const Sidebar = () => {
   const { toast } = useToast();
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
 
-  // Mock authentication - in a real app, this would use Firebase/Auth0/etc.
   useEffect(() => {
-    // For demo purposes, pretend the user is logged in
-    setUser({
-      name: "John Doe",
-      email: "john@example.com",
-      avatar: "",
-    });
-  }, []);
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          const name = currentUser.user_metadata?.full_name || 
+                       currentUser.user_metadata?.name || 
+                       currentUser.email?.split('@')[0] || 
+                       "User";
+          
+          setUser({
+            name: name,
+            email: currentUser.email || "",
+            avatar: currentUser.user_metadata?.avatar_url || "",
+          });
+        } else {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        setUser(null);
+      }
+    };
+    
+    fetchUser();
+  }, [navigate]);
 
   const handleNavigate = (path: string) => {
     navigate(path);
   };
 
-  const handleLogout = () => {
-    // Mock logout
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account",
-    });
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const { error } = await signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of your account",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout error",
+        description: "An unexpected error occurred during logout",
+        variant: "destructive",
+      });
+    }
   };
 
   const menuItems = [
@@ -83,7 +118,6 @@ const Sidebar = () => {
             <Briefcase className="w-6 h-6 text-sidebar-foreground" />
             <h1 className="text-xl font-bold text-sidebar-foreground">JobMatch</h1>
           </div>
-          {/* Fix: Removed asChild prop from SidebarTrigger and moved Button inside it */}
           <SidebarTrigger>
             <Menu className="h-5 w-5" />
           </SidebarTrigger>
