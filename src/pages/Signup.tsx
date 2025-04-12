@@ -29,8 +29,14 @@ const Signup = () => {
     checkUser();
   }, [navigate]);
 
+  // Ensure event propagation is stopped for button clicks
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsLoading(true);
     
     try {
@@ -66,7 +72,8 @@ const Signup = () => {
     }
   };
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleSignup = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsLoading(true);
     
     try {
@@ -146,6 +153,7 @@ const Signup = () => {
                 type="submit" 
                 className="w-full" 
                 disabled={isLoading}
+                onClick={handleButtonClick}
               >
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
@@ -178,6 +186,7 @@ const Signup = () => {
                 className="text-primary hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   navigate("/login");
                 }}
               >
