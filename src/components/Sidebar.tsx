@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -7,8 +6,7 @@ import {
   FileText, 
   Settings,
   LogOut,
-  Menu,
-  FolderCog
+  Menu
 } from "lucide-react";
 import { 
   Sidebar as SidebarComponent, 
@@ -101,12 +99,7 @@ const Sidebar = () => {
       path: "/jobs",
     },
     {
-      title: "Job Admin1",
-      icon: FolderCog,
-      path: "/job-admin",
-    },
-    {
-      title: "Resume1",
+      title: "Resume",
       icon: FileText,
       path: "/resume",
     },

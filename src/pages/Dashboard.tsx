@@ -7,7 +7,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress.jsx";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart,
@@ -56,7 +56,7 @@ const upcomingInterviews = [
   {
     id: 1,
     company: "TechCorp",
-    position: "Frontend Developer1",
+    position: "Frontend Developer",
     date: "Apr 15, 2025",
     time: "10:00 AM",
     type: "Video Call"
