@@ -9,7 +9,7 @@ import AuthCard from "@/components/auth/AuthCard.jsx";
 import LoginForm from "@/components/auth/LoginForm.jsx";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import AuthDivider from "@/components/auth/AuthDivider";
-import AuthError from "@/components/auth/AuthError";
+import AuthError from "@/components/auth/AuthError.jsx";
 import AuthFooter from "@/components/auth/AuthFooter.jsx";
 
 const Login = () => {
