@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster.jsx";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +12,7 @@ import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
 import Settings from "./pages/Settings.jsx";
 import NotFound from "./pages/NotFound.jsx";
-import JobAdmin from "./pages/JobAdmin";
+import JobAdmin from "./pages/JobAdmin.jsx";
 import { getSession, supabase } from "./lib/supabase";
 import { useToast } from "./components/ui/use-toast.jsx";
 
