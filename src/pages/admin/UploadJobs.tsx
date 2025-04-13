@@ -48,7 +48,6 @@ const UploadJobs = () => {
   const [skill, setSkill] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
-  // Check if user is admin
   const checkAdminAccess = async () => {
     try {
       const { data } = await supabase.auth.getUser();
@@ -66,7 +65,6 @@ const UploadJobs = () => {
     }
   };
 
-  // Run once on component mount
   useEffect(() => {
     checkAdminAccess();
   }, []);
@@ -98,13 +96,10 @@ const UploadJobs = () => {
     setIsUploading(true);
     
     try {
-      // Calculate a random match score between 70-98 for demonstration
       const match = Math.floor(Math.random() * 28) + 70;
       
-      // Logo based on company name
       const logo = jobData.company.substring(0, 2).toUpperCase();
       
-      // Prepare the job data for insertion
       const jobForDB = {
         title: jobData.title,
         company: jobData.company,
@@ -112,7 +107,7 @@ const UploadJobs = () => {
         type: jobData.type,
         match: match,
         salary: jobData.salary,
-        postedAt: new Date().toISOString(),
+        postedat: new Date().toISOString(),
         logo: logo,
         skills: jobData.skills,
         description: jobData.description || "",
@@ -122,7 +117,6 @@ const UploadJobs = () => {
       
       console.log("Inserting job data:", jobForDB);
       
-      // Insert into Supabase
       const { data, error } = await supabase
         .from('jobs')
         .insert([jobForDB]);
@@ -136,7 +130,6 @@ const UploadJobs = () => {
         description: "The job has been added to the database",
       });
       
-      // Reset form
       setJobData(initialJobData);
     } catch (error: any) {
       console.error("Error uploading job:", error);

@@ -9,7 +9,115 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      job_applications: {
+        Row: {
+          applied_at: string | null
+          id: number
+          job_id: number
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          id?: never
+          job_id: number
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          id?: never
+          job_id?: number
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          company: string
+          description: string | null
+          id: number
+          location: string
+          logo: string | null
+          match: number | null
+          postedat: string | null
+          salary: string | null
+          skills: string[] | null
+          source: string | null
+          title: string
+          type: string | null
+          url: string | null
+        }
+        Insert: {
+          company: string
+          description?: string | null
+          id?: never
+          location: string
+          logo?: string | null
+          match?: number | null
+          postedat?: string | null
+          salary?: string | null
+          skills?: string[] | null
+          source?: string | null
+          title: string
+          type?: string | null
+          url?: string | null
+        }
+        Update: {
+          company?: string
+          description?: string | null
+          id?: never
+          location?: string
+          logo?: string | null
+          match?: number | null
+          postedat?: string | null
+          salary?: string | null
+          skills?: string[] | null
+          source?: string | null
+          title?: string
+          type?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          id: number
+          job_id: number
+          saved_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: never
+          job_id: number
+          saved_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: never
+          job_id?: number
+          saved_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

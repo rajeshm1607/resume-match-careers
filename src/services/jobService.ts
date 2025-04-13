@@ -42,10 +42,11 @@ export const searchJobs = async (
 
     console.log(`Found ${jobs.length} jobs in Supabase`);
     
-    // Format dates - convert ISO to readable format
+    // Format dates - convert ISO to readable format and map column names
     jobs = jobs.map(job => ({
       ...job,
-      postedAt: formatPostedDate(job.postedAt)
+      // Map postedat (from DB) to postedAt (expected in interface)
+      postedAt: formatPostedDate(job.postedat || new Date().toISOString())
     }));
 
     // Filter jobs based on query and filters
@@ -98,7 +99,7 @@ export const searchJobs = async (
     }
 
     // Sort by match score
-    return filteredJobs.sort((a, b) => b.match - a.match);
+    return filteredJobs.sort((a, b) => (b.match || 0) - (a.match || 0));
   } catch (error) {
     console.error('Error searching jobs:', error);
     return getMockJobs(query, filters, skills);
