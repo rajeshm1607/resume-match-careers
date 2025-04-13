@@ -60,7 +60,8 @@ export const uploadAndParseResume = async (file: File): Promise<ResumeUploadResp
   }
 };
 
-export const getLatestParsedResume = async (userId?: string): Promise<ParsedResume | null> => {
+// Updated to make it compatible with React Query
+export const getLatestParsedResume = async (): Promise<ParsedResume | null> => {
   try {
     // In a real app, you'd filter by user ID
     const { data, error } = await supabase

@@ -54,6 +54,7 @@ const Resume = () => {
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: getLatestParsedResume,
+    enabled: true,
   });
 
   const uploadMutation = useMutation({
