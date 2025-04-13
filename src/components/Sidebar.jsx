@@ -7,7 +7,8 @@ import {
   FileText, 
   Settings,
   LogOut,
-  Menu
+  Menu,
+  FolderCog
 } from "lucide-react";
 import { 
   Sidebar as SidebarComponent, 
@@ -16,8 +17,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger
+  SidebarMenuItem
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
@@ -98,6 +98,11 @@ const Sidebar = () => {
       title: "Jobs",
       icon: Briefcase,
       path: "/jobs",
+    },
+    {
+      title: "Job Admin",
+      icon: FolderCog,
+      path: "/job-admin",
     },
     {
       title: "Resume",
