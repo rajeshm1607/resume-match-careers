@@ -10,6 +10,8 @@ const Index = () => {
     const checkSession = async () => {
       try {
         const session = await getSession();
+        console.log("Session check on Index page:", session ? "User logged in" : "No session");
+        
         if (session) {
           navigate("/dashboard");
         } else {

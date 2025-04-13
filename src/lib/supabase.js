@@ -42,11 +42,13 @@ export const signInWithGoogle = async () => {
 };
 
 export const signInWithEmail = async (email, password) => {
+  console.log("Attempting to sign in with email:", email);
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
   
+  console.log("Sign in result:", data ? "Success" : "Failed", error);
   return { data, error };
 };
 
@@ -75,7 +77,7 @@ export const getCurrentUser = async () => {
   return user;
 };
 
-// Add function to get session
+// Get session
 export const getSession = async () => {
   try {
     const { data, error } = await supabase.auth.getSession();

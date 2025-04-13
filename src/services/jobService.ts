@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 export interface Job {
@@ -23,47 +22,58 @@ export const searchJobs = async (
   skills: string[] = []
 ): Promise<Job[]> => {
   try {
-    // In a real app, you would make an API call to your serverless function 
-    // that queries external job APIs like LinkedIn or Indeed.
-    // For now, we'll simulate this with a Supabase query to a jobs table.
-
-    // First check if we have stored jobs in Supabase
-    let { data: storedJobs, error } = await supabase
+    console.log("Searching jobs with query:", query, "filters:", filters);
+    
+    // Fetch jobs from Supabase
+    let { data: jobs, error } = await supabase
       .from('jobs')
       .select('*');
+    
+    if (error) {
+      console.error("Error fetching jobs from Supabase:", error);
+      throw error;
+    }
 
-    if (error || !storedJobs || storedJobs.length === 0) {
-      // If we don't have stored jobs, use mock data
+    // If no jobs found in Supabase, return mock data
+    if (!jobs || jobs.length === 0) {
+      console.log("No jobs found in Supabase, using mock data");
       return getMockJobs(query, filters, skills);
     }
 
+    console.log(`Found ${jobs.length} jobs in Supabase`);
+    
+    // Format dates - convert ISO to readable format
+    jobs = jobs.map(job => ({
+      ...job,
+      postedAt: formatPostedDate(job.postedAt)
+    }));
+
     // Filter jobs based on query and filters
-    // This would normally be done in the database query
-    let filteredJobs = storedJobs as Job[];
+    let filteredJobs = jobs as Job[];
     
     if (query) {
       const lowerQuery = query.toLowerCase();
       filteredJobs = filteredJobs.filter(job => 
-        job.title.toLowerCase().includes(lowerQuery) ||
-        job.company.toLowerCase().includes(lowerQuery) ||
-        job.skills.some(skill => skill.toLowerCase().includes(lowerQuery))
+        job.title?.toLowerCase().includes(lowerQuery) ||
+        job.company?.toLowerCase().includes(lowerQuery) ||
+        job.skills?.some(skill => skill.toLowerCase().includes(lowerQuery))
       );
     }
 
     if (filters.type && filters.type !== 'all') {
       filteredJobs = filteredJobs.filter(job => 
-        job.type.toLowerCase() === filters.type?.toLowerCase()
+        job.type?.toLowerCase() === filters.type?.toLowerCase()
       );
     }
 
     if (filters.location && filters.location !== 'all') {
       if (filters.location === 'remote') {
         filteredJobs = filteredJobs.filter(job => 
-          job.location.toLowerCase() === 'remote'
+          job.location?.toLowerCase().includes('remote')
         );
       } else if (filters.location === 'onsite') {
         filteredJobs = filteredJobs.filter(job => 
-          job.location.toLowerCase() !== 'remote'
+          !job.location?.toLowerCase().includes('remote')
         );
       }
     }
@@ -71,13 +81,15 @@ export const searchJobs = async (
     // Calculate match score if skills are provided
     if (skills.length > 0) {
       filteredJobs = filteredJobs.map(job => {
+        if (!job.skills) job.skills = [];
+        
         const matchingSkills = skills.filter(skill => 
           job.skills.some(jobSkill => 
             jobSkill.toLowerCase().includes(skill.toLowerCase())
           )
         );
         
-        const matchScore = Math.round((matchingSkills.length / skills.length) * 100);
+        const matchScore = Math.min(100, Math.round((matchingSkills.length / skills.length) * 100 + Math.random() * 10));
         return {
           ...job,
           match: matchScore
@@ -89,7 +101,36 @@ export const searchJobs = async (
     return filteredJobs.sort((a, b) => b.match - a.match);
   } catch (error) {
     console.error('Error searching jobs:', error);
-    return [];
+    return getMockJobs(query, filters, skills);
+  }
+};
+
+// Helper function to format dates
+const formatPostedDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return "Today";
+    } else if (diffDays === 1) {
+      return "Yesterday";
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      return `${Math.floor(diffDays / 7)} weeks ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return dateString;
   }
 };
 
@@ -220,9 +261,21 @@ const getMockJobs = (
 
 export const saveJob = async (jobId: number): Promise<boolean> => {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No user logged in');
+      return false;
+    }
+
     const { error } = await supabase
       .from('saved_jobs')
-      .insert({ job_id: jobId, saved_at: new Date().toISOString() });
+      .insert({ 
+        job_id: jobId, 
+        user_id: user.id,
+        saved_at: new Date().toISOString() 
+      });
 
     return !error;
   } catch (error) {
@@ -233,9 +286,22 @@ export const saveJob = async (jobId: number): Promise<boolean> => {
 
 export const applyToJob = async (jobId: number): Promise<boolean> => {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No user logged in');
+      return false;
+    }
+
     const { error } = await supabase
       .from('job_applications')
-      .insert({ job_id: jobId, applied_at: new Date().toISOString() });
+      .insert({ 
+        job_id: jobId, 
+        user_id: user.id,
+        applied_at: new Date().toISOString(),
+        status: 'started'
+      });
 
     return !error;
   } catch (error) {

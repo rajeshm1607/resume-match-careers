@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, Plus, Trash2 } from "lucide-react";
 import { 
@@ -52,8 +51,8 @@ const UploadJobs = () => {
   // Check if user is admin
   const checkAdminAccess = async () => {
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user || user.data.user.email !== "rajeshkumarpsg16@gmail.com") {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user || data.user.email !== "rajeshkumarpsg16@gmail.com") {
         toast({
           title: "Access denied",
           description: "You don't have permission to view this page",
@@ -68,9 +67,9 @@ const UploadJobs = () => {
   };
 
   // Run once on component mount
-  useState(() => {
+  useEffect(() => {
     checkAdminAccess();
-  });
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -101,11 +100,6 @@ const UploadJobs = () => {
     try {
       // Calculate a random match score between 70-98 for demonstration
       const match = Math.floor(Math.random() * 28) + 70;
-      const postedAt = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
       
       // Logo based on company name
       const logo = jobData.company.substring(0, 2).toUpperCase();
@@ -118,19 +112,20 @@ const UploadJobs = () => {
         type: jobData.type,
         match: match,
         salary: jobData.salary,
-        postedAt: "Just now",
+        postedAt: new Date().toISOString(),
         logo: logo,
         skills: jobData.skills,
-        description: jobData.description,
-        url: jobData.url,
-        source: jobData.source
+        description: jobData.description || "",
+        url: jobData.url || "",
+        source: jobData.source || "Admin Upload"
       };
+      
+      console.log("Inserting job data:", jobForDB);
       
       // Insert into Supabase
       const { data, error } = await supabase
         .from('jobs')
-        .insert([jobForDB])
-        .select();
+        .insert([jobForDB]);
       
       if (error) {
         throw error;
