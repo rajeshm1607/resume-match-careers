@@ -1,15 +1,15 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
-import { getCurrentUser, getSession, supabase } from "@/lib/supabase";
+import { getSession, supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 const MainLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [authenticated, setAuthenticated] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
   
@@ -29,17 +29,14 @@ const MainLayout = ({ children }) => {
             
             if (error) {
               console.error("Auth hash processing error:", error);
-              toast({
-                title: "Authentication Error",
-                description: "Failed to process login information. Please try again.",
-                variant: "destructive"
-              });
-              navigate("/login", { replace: true });
+              setAuthenticated(false);
+              setLoading(false);
               return;
             } else if (data?.user) {
               console.log("User authenticated from hash params");
               // Clean up the URL
               window.history.replaceState({}, document.title, window.location.pathname);
+              setAuthenticated(true);
               setLoading(false);
               return;
             }
@@ -51,28 +48,24 @@ const MainLayout = ({ children }) => {
         // Check for active session
         const session = await getSession();
         if (!session) {
-          console.log("No active session found, redirecting to login");
-          navigate("/login", { replace: true });
+          console.log("No active session found");
+          setAuthenticated(false);
+          setLoading(false);
           return;
         }
         
         console.log("Valid session found in MainLayout");
+        setAuthenticated(true);
         setLoading(false);
       } catch (error) {
         console.error("Authentication check error:", error);
-        toast({
-          title: "Authentication Error",
-          description: "Please log in again to continue.",
-          variant: "destructive"
-        });
-        navigate("/login", { replace: true });
-      } finally {
+        setAuthenticated(false);
         setLoading(false);
       }
     };
     
     checkAuth();
-  }, [navigate, location, toast]);
+  }, [location]);
 
   // Monitor auth state changes
   useEffect(() => {
@@ -81,10 +74,10 @@ const MainLayout = ({ children }) => {
         console.log("Auth state change in MainLayout:", event);
         
         if (event === 'SIGNED_OUT') {
-          navigate("/login", { replace: true });
+          setAuthenticated(false);
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User signed in with session in MainLayout");
-          setLoading(false);
+          setAuthenticated(true);
         }
       }
     );
@@ -92,7 +85,7 @@ const MainLayout = ({ children }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
   
   if (loading) {
     return (
@@ -100,6 +93,10 @@ const MainLayout = ({ children }) => {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+  
+  if (!authenticated) {
+    return <Navigate to="/login" />;
   }
 
   return (

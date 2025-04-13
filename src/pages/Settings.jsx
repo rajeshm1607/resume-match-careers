@@ -1,9 +1,33 @@
 
+import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSession } from "@/lib/supabase";
 
 const Settings = () => {
+  const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getSession();
+        setAuthenticated(!!session);
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  if (loading) return null;
+  if (!authenticated) return <Navigate to="/login" />;
+
   return (
     <MainLayout>
       <div className="space-y-6">
