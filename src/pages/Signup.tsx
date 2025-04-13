@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { signUp, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
+import LoginForm from "@/components/auth/LoginForm.jsx";
 
 const Signup = () => {
   const [name, setName] = useState("");

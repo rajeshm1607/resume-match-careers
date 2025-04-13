@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/supabase";
 // Import our new components
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard.jsx";
-import LoginForm from "@/components/auth/LoginForm";
+import LoginForm from "@/components/auth/LoginForm.jsx";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthError from "@/components/auth/AuthError";
