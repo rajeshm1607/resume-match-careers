@@ -56,7 +56,7 @@ const upcomingInterviews = [
   {
     id: 1,
     company: "TechCorp",
-    position: "Frontend Developer",
+    position: "Frontend Developer1",
     date: "Apr 15, 2025",
     time: "10:00 AM",
     type: "Video Call"
