@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import LoginForm from "@/components/auth/LoginForm.jsx";
+import AuthFooter from "@/components/auth/AuthFooter.jsx";
 
 const Signup = () => {
   const [name, setName] = useState("");

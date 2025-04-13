@@ -10,7 +10,7 @@ import LoginForm from "@/components/auth/LoginForm.jsx";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthError from "@/components/auth/AuthError";
-import AuthFooter from "@/components/auth/AuthFooter";
+import AuthFooter from "@/components/auth/AuthFooter.jsx";
 
 const Login = () => {
   const [googleDisabled, setGoogleDisabled] = useState(false);
