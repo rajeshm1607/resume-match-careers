@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -6,7 +7,8 @@ import {
   FileText, 
   Settings,
   LogOut,
-  Menu
+  Menu,
+  Upload
 } from "lucide-react";
 import { 
   Sidebar as SidebarComponent, 
@@ -87,6 +89,7 @@ const Sidebar = () => {
     }
   };
 
+  // Define the standard menu items
   const menuItems = [
     {
       title: "Dashboard",
@@ -109,6 +112,19 @@ const Sidebar = () => {
       path: "/settings",
     },
   ];
+
+  // Add admin menu item if the user has the specific email
+  const isAdmin = user?.email === "rajeshkumarpsg16@gmail.com";
+  
+  // If user is admin, add the admin page to menu items
+  const allMenuItems = isAdmin ? [
+    ...menuItems,
+    {
+      title: "Upload Jobs",
+      icon: Upload,
+      path: "/admin/upload-jobs",
+    },
+  ] : menuItems;
 
   return (
     <SidebarComponent>
@@ -142,7 +158,7 @@ const Sidebar = () => {
           </div>
           
           <SidebarMenu>
-            {menuItems.map((item) => (
+            {allMenuItems.map((item) => (
               <SidebarMenuItem key={item.path}>
                 <SidebarMenuButton 
                   className={location.pathname === item.path ? "bg-sidebar-accent" : ""}
