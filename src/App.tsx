@@ -13,6 +13,7 @@ import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import MainLayout from "./layouts/MainLayout"; // Updated import
 import { getSession, supabase } from "./lib/supabase";
 import { useToast } from "./components/ui/use-toast";
 
