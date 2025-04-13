@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,52 +33,41 @@ const Jobs = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const session = await getSession();
+        console.log("Jobs page session check:", session ? "Authenticated" : "Not authenticated");
         if (!session) {
-          console.log("No session found in Jobs page, redirecting to login");
           navigate("/login");
-        } else {
-          setIsCheckingAuth(false);
         }
       } catch (error) {
-        console.error("Authentication check error:", error);
-        navigate("/login");
+        console.error("Authentication check error in Jobs:", error);
       }
     };
     
     checkAuth();
   }, [navigate]);
   
-  // Fetch resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
-    enabled: !isCheckingAuth,
   });
 
-  // Use useEffect to handle the successful data fetch
   useEffect(() => {
     if (resumeQuery.data && resumeQuery.data.skills) {
       setResumeSkills(resumeQuery.data.skills);
     }
   }, [resumeQuery.data]);
 
-  // Fetch jobs based on search query, filters, and resume skills
   const jobsQuery = useQuery({
     queryKey: ['jobs', searchQuery, filterType, filterLocation, resumeSkills],
     queryFn: () => searchJobs(searchQuery, { type: filterType, location: filterLocation }, resumeSkills),
-    enabled: !isCheckingAuth,
   });
 
-  // Save job mutation
   const saveMutation = useMutation({
     mutationFn: saveJob,
     onSuccess: () => {
@@ -97,7 +85,6 @@ const Jobs = () => {
     }
   });
 
-  // Apply to job mutation
   const applyMutation = useMutation({
     mutationFn: applyToJob,
     onSuccess: () => {
@@ -124,17 +111,17 @@ const Jobs = () => {
   };
 
   const filteredJobs = jobsQuery.data || [];
-  const isLoading = isCheckingAuth || jobsQuery.isLoading || resumeQuery.isLoading;
+  const isLoading = jobsQuery.isLoading || resumeQuery.isLoading;
   const isError = jobsQuery.isError || resumeQuery.isError;
   const resume = resumeQuery.data;
   
-  // If still checking auth, show loading
-  if (isCheckingAuth) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Checking authentication...</span>
-      </div>
+      <MainLayout>
+        <div className="flex justify-center items-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
     );
   }
 
@@ -187,11 +174,7 @@ const Jobs = () => {
               </div>
             </div>
             
-            {isLoading ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : isError ? (
+            {isError ? (
               <div className="text-center py-10 bg-red-50 rounded-lg">
                 <p className="text-red-500">Failed to load jobs. Please try again.</p>
               </div>

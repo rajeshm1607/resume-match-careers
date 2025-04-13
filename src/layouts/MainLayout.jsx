@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
@@ -17,31 +17,28 @@ const MainLayout = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        setLoading(true);
-        
-        // Check for active session
         const session = await getSession();
+        console.log("MainLayout auth check:", session ? "Session found" : "No session");
+        
         if (!session) {
-          console.log("No active session found in MainLayout");
+          console.log("No active session found in MainLayout, redirecting to login");
           setAuthenticated(false);
           navigate("/login");
-          setLoading(false);
           return;
         }
         
-        console.log("Valid session found in MainLayout");
         setAuthenticated(true);
-        setLoading(false);
       } catch (error) {
-        console.error("Authentication check error:", error);
+        console.error("Authentication check error in MainLayout:", error);
         setAuthenticated(false);
-        setLoading(false);
         navigate("/login");
+      } finally {
+        setLoading(false);
       }
     };
     
     checkAuth();
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   // Monitor auth state changes
   useEffect(() => {
@@ -59,7 +56,7 @@ const MainLayout = ({ children }) => {
     );
     
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, [navigate]);
   
@@ -71,8 +68,6 @@ const MainLayout = ({ children }) => {
     );
   }
 
-  // No longer redirecting here as we already redirect in the useEffect
-  // This prevents a potential redirect loop
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">

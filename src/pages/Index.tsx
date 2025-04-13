@@ -11,7 +11,6 @@ const Index = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        setIsLoading(true);
         const session = await getSession();
         console.log("Session check on Index page:", session ? "User logged in" : "No session");
         

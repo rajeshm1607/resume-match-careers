@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -32,25 +31,20 @@ const Resume = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const session = await getSession();
+        console.log("Resume page session check:", session ? "Authenticated" : "Not authenticated");
         if (!session) {
-          console.log("No session found in Resume page, redirecting to login");
           navigate("/login");
-        } else {
-          setIsCheckingAuth(false);
         }
       } catch (error) {
-        console.error("Authentication check error:", error);
-        navigate("/login");
+        console.error("Authentication check error in Resume:", error);
       }
     };
     
@@ -59,8 +53,7 @@ const Resume = () => {
   
   const resumeQuery = useQuery({
     queryKey: ['resume'],
-    queryFn: () => getLatestParsedResume(),
-    enabled: !isCheckingAuth,
+    queryFn: getLatestParsedResume,
   });
 
   const uploadMutation = useMutation({
@@ -146,15 +139,15 @@ const Resume = () => {
   const isUploading = uploadMutation.isPending;
   const resumeData = resumeQuery.data;
   const resumeUploaded = !!resumeData;
-  const isLoading = isCheckingAuth || resumeQuery.isLoading;
+  const isLoading = resumeQuery.isLoading;
   
-  // If still checking auth, show loading
-  if (isCheckingAuth) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Checking authentication...</span>
-      </div>
+      <MainLayout>
+        <div className="flex justify-center items-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
     );
   }
 
@@ -164,13 +157,7 @@ const Resume = () => {
         <h1 className="text-2xl font-bold mb-6">Resume Management</h1>
         
         <div className="grid gap-6">
-          {isLoading ? (
-            <Card>
-              <CardContent className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </CardContent>
-            </Card>
-          ) : !resumeUploaded ? (
+          {!resumeUploaded ? (
             <Card>
               <CardHeader>
                 <CardTitle>Upload Your Resume</CardTitle>
