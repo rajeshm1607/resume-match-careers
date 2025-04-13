@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,7 +7,7 @@ import { getCurrentUser } from "@/lib/supabase";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
 import LoginForm from "@/components/auth/LoginForm";
-import GoogleButton from "@/components/auth/GoogleButton";
+import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthError from "@/components/auth/AuthError";
 import AuthFooter from "@/components/auth/AuthFooter";

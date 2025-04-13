@@ -9,6 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 import { signUp, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import GoogleButton from "@/components/auth/GoogleButton";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -21,7 +22,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
       const user = await getCurrentUser();
@@ -32,7 +32,6 @@ const Signup = () => {
     
     checkUser();
     
-    // Remove any stored auth errors on fresh signup page load
     if (localStorage.getItem("auth_provider_error")) {
       localStorage.removeItem("auth_provider_error");
       setProviderError("");
@@ -40,7 +39,6 @@ const Signup = () => {
     }
   }, [navigate]);
 
-  // Check localStorage for previous provider errors
   useEffect(() => {
     const savedProviderError = localStorage.getItem("auth_provider_error");
     if (savedProviderError === "google") {
@@ -49,7 +47,6 @@ const Signup = () => {
     }
   }, []);
 
-  // Ensure event propagation is stopped for button clicks
   const handleButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -76,7 +73,6 @@ const Signup = () => {
             "Welcome to JobMatch!",
         });
         
-        // If email confirmation is not required, redirect to dashboard
         if (data?.user && !data?.session) {
           navigate("/dashboard");
         }
@@ -101,7 +97,6 @@ const Signup = () => {
       
       if (error) {
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
-          // Save to localStorage to persist across pages
           localStorage.setItem("auth_provider_error", "google");
           
           toast({
@@ -120,7 +115,9 @@ const Signup = () => {
         }
         setGoogleLoading(false);
       }
-      // If no error, redirect will happen automatically
+      if (data?.user && !data?.session) {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Signup error",
@@ -212,15 +209,12 @@ const Signup = () => {
                   </div>
                 </div>
                 
-                <Button
+                <GoogleButton
                   variant="outline"
                   className="w-full"
                   onClick={handleGoogleSignup}
                   disabled={googleLoading}
-                >
-                  <FcGoogle className="mr-2 h-5 w-5" />
-                  {googleLoading ? "Connecting to Google..." : "Google"}
-                </Button>
+                />
               </>
             )}
           </CardContent>
