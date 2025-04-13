@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
@@ -11,6 +11,7 @@ const MainLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   useEffect(() => {
@@ -23,6 +24,7 @@ const MainLayout = ({ children }) => {
         if (!session) {
           console.log("No active session found in MainLayout");
           setAuthenticated(false);
+          navigate("/login");
           setLoading(false);
           return;
         }
@@ -34,11 +36,12 @@ const MainLayout = ({ children }) => {
         console.error("Authentication check error:", error);
         setAuthenticated(false);
         setLoading(false);
+        navigate("/login");
       }
     };
     
     checkAuth();
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   // Monitor auth state changes
   useEffect(() => {
@@ -48,6 +51,7 @@ const MainLayout = ({ children }) => {
         
         if (event === 'SIGNED_OUT') {
           setAuthenticated(false);
+          navigate("/login");
         } else if (event === 'SIGNED_IN' && session) {
           setAuthenticated(true);
         }
@@ -57,7 +61,7 @@ const MainLayout = ({ children }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
   
   if (loading) {
     return (
@@ -66,9 +70,15 @@ const MainLayout = ({ children }) => {
       </div>
     );
   }
-  
+
+  // No longer redirecting here as we already redirect in the useEffect
+  // This prevents a potential redirect loop
   if (!authenticated) {
-    return <Navigate to="/login" />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (

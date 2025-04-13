@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,18 +26,41 @@ import MainLayout from "@/layouts/MainLayout";
 import { uploadAndParseResume, ParsedResume } from "@/services/resumeService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getLatestParsedResume } from "@/services/resumeService";
+import { getSession } from "@/lib/supabase";
 
 const Resume = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getSession();
+        if (!session) {
+          console.log("No session found in Resume page, redirecting to login");
+          navigate("/login");
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (error) {
+        console.error("Authentication check error:", error);
+        navigate("/login");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+  
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
+    enabled: !isCheckingAuth,
   });
 
   const uploadMutation = useMutation({
@@ -122,7 +146,17 @@ const Resume = () => {
   const isUploading = uploadMutation.isPending;
   const resumeData = resumeQuery.data;
   const resumeUploaded = !!resumeData;
-  const isLoading = resumeQuery.isLoading;
+  const isLoading = isCheckingAuth || resumeQuery.isLoading;
+  
+  // If still checking auth, show loading
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Checking authentication...</span>
+      </div>
+    );
+  }
 
   return (
     <MainLayout>

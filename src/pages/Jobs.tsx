@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,25 +19,50 @@ import {
   Clock, 
   Search,
   BookmarkPlus,
-  Filter,
   ExternalLink,
+  Loader2
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { searchJobs, saveJob, applyToJob } from "@/services/jobService";
 import { getLatestParsedResume } from "@/services/resumeService";
+import { getSession } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getSession();
+        if (!session) {
+          console.log("No session found in Jobs page, redirecting to login");
+          navigate("/login");
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (error) {
+        console.error("Authentication check error:", error);
+        navigate("/login");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
   
   // Fetch resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
+    enabled: !isCheckingAuth,
   });
 
   // Use useEffect to handle the successful data fetch
@@ -50,7 +76,7 @@ const Jobs = () => {
   const jobsQuery = useQuery({
     queryKey: ['jobs', searchQuery, filterType, filterLocation, resumeSkills],
     queryFn: () => searchJobs(searchQuery, { type: filterType, location: filterLocation }, resumeSkills),
-    enabled: true,
+    enabled: !isCheckingAuth,
   });
 
   // Save job mutation
@@ -98,9 +124,19 @@ const Jobs = () => {
   };
 
   const filteredJobs = jobsQuery.data || [];
-  const isLoading = jobsQuery.isLoading || resumeQuery.isLoading;
+  const isLoading = isCheckingAuth || jobsQuery.isLoading || resumeQuery.isLoading;
   const isError = jobsQuery.isError || resumeQuery.isError;
   const resume = resumeQuery.data;
+  
+  // If still checking auth, show loading
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Checking authentication...</span>
+      </div>
+    );
+  }
 
   return (
     <MainLayout>

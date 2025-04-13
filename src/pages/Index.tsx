@@ -18,6 +18,7 @@ const Index = () => {
         if (session) {
           navigate("/dashboard");
         } else {
+          console.log("Redirecting to login from Index");
           navigate("/login");
         }
       } catch (error) {
