@@ -12,7 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
 import Settings from "./pages/Settings.jsx";
-import NotFound from "./pages/NotFound.js";
+import NotFound from "./pages/NotFound.jsx";
 import JobAdmin from "./pages/JobAdmin";
 import { getSession, supabase } from "./lib/supabase";
 import { useToast } from "./components/ui/use-toast.jsx";
