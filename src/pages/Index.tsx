@@ -29,7 +29,7 @@ const Index = () => {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Sarah Joqqqqqqqhnson",
       role: "UX Designer",
       content: "JobMatch helped me find opportunities that perfectly matched my skill set. I landed my dream job in just 3 weeks!",
       avatar: "SJ"
