@@ -13,6 +13,7 @@ import GoogleButton from "@/components/auth/GoogleButton.jsx";
 import LoginForm from "@/components/auth/LoginForm.jsx";
 import AuthFooter from "@/components/auth/AuthFooter.jsx";
 import AuthError from "@/components/auth/AuthError.jsx";
+import AuthDivider from "@/components/auth/AuthDivider.jsx";
 
 const Signup = () => {
   const [name, setName] = useState("");

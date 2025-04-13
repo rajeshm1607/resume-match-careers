@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,7 +9,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard.jsx";
 import LoginForm from "@/components/auth/LoginForm.jsx";
 import GoogleButton from "@/components/auth/GoogleButton.jsx";
-import AuthDivider from "@/components/auth/AuthDivider";
+import AuthDivider from "@/components/auth/AuthDivider.jsx";
 import AuthError from "@/components/auth/AuthError.jsx";
 import AuthFooter from "@/components/auth/AuthFooter.jsx";
 
