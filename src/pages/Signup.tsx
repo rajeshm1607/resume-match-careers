@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { FcGoogle } from "react-icons/fc";
 import { signUp, signInWithGoogle, getCurrentUser } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import GoogleButton from "@/components/auth/GoogleButton";
+import GoogleButton from "@/components/auth/GoogleButton.jsx";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -93,7 +94,7 @@ const Signup = () => {
     setGoogleLoading(true);
     
     try {
-      const { error } = await signInWithGoogle();
+      const { data, error } = await signInWithGoogle();
       
       if (error) {
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
