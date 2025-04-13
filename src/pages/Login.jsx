@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { getCurrentUser } from "@/lib/supabase";
+import { getCurrentUser, getSession } from "@/lib/supabase";
 
-// Import our new components
+// Import our components
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard.jsx";
 import LoginForm from "@/components/auth/LoginForm.jsx";
@@ -16,14 +16,24 @@ import AuthFooter from "@/components/auth/AuthFooter.jsx";
 const Login = () => {
   const [googleDisabled, setGoogleDisabled] = useState(false);
   const [providerError, setProviderError] = useState("");
+  const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
 
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        navigate("/dashboard");
+      try {
+        setIsChecking(true);
+        const session = await getSession();
+        
+        if (session) {
+          console.log("User already logged in, redirecting to dashboard");
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+      } finally {
+        setIsChecking(false);
       }
     };
     
@@ -50,6 +60,14 @@ const Login = () => {
     setGoogleDisabled(true);
     setProviderError(message);
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthLayout>

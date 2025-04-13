@@ -18,37 +18,10 @@ const MainLayout = ({ children }) => {
       try {
         setLoading(true);
         
-        // Process auth redirect hash if present
-        if (window.location.hash && (
-            window.location.hash.includes('access_token') || 
-            window.location.hash.includes('error_description')
-        )) {
-          console.log("Auth hash parameters detected in MainLayout");
-          try {
-            const { data, error } = await supabase.auth.getUser();
-            
-            if (error) {
-              console.error("Auth hash processing error:", error);
-              setAuthenticated(false);
-              setLoading(false);
-              return;
-            } else if (data?.user) {
-              console.log("User authenticated from hash params");
-              // Clean up the URL
-              window.history.replaceState({}, document.title, window.location.pathname);
-              setAuthenticated(true);
-              setLoading(false);
-              return;
-            }
-          } catch (hashError) {
-            console.error("Error processing auth hash:", hashError);
-          }
-        }
-        
         // Check for active session
         const session = await getSession();
         if (!session) {
-          console.log("No active session found");
+          console.log("No active session found in MainLayout");
           setAuthenticated(false);
           setLoading(false);
           return;
@@ -65,7 +38,7 @@ const MainLayout = ({ children }) => {
     };
     
     checkAuth();
-  }, [location]);
+  }, [location.pathname]);
 
   // Monitor auth state changes
   useEffect(() => {
@@ -76,7 +49,6 @@ const MainLayout = ({ children }) => {
         if (event === 'SIGNED_OUT') {
           setAuthenticated(false);
         } else if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in with session in MainLayout");
           setAuthenticated(true);
         }
       }

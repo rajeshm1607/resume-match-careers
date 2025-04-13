@@ -30,28 +30,30 @@ const LoginForm = () => {
           description: error.message,
           variant: "destructive"
         });
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log("Login successful, user data:", data.user ? "User exists" : "No user");
+      toast({
+        title: "Login successful",
+        description: "Welcome back to JobMatch!",
+      });
+      
+      // Double-check we have a valid session before navigating
+      const session = await getSession();
+      console.log("Post-login session check:", session ? "Session exists" : "No session");
+      
+      if (session) {
+        console.log("Navigating to dashboard after successful login");
+        navigate("/dashboard");
       } else {
-        console.log("Login successful, user data:", data.user ? "User exists" : "No user");
+        console.error("Session validation failed after login");
         toast({
-          title: "Login successful",
-          description: "Welcome back to JobMatch!",
+          title: "Session Error",
+          description: "Unable to establish a session. Please try again.",
+          variant: "destructive"
         });
-        
-        // Double-check we have a valid session before navigating
-        const session = await getSession();
-        console.log("Post-login session check:", session ? "Session exists" : "No session");
-        
-        if (session) {
-          console.log("Navigating to dashboard after successful login");
-          navigate("/dashboard");
-        } else {
-          console.error("Session validation failed after login");
-          toast({
-            title: "Session Error",
-            description: "Unable to establish a session. Please try again.",
-            variant: "destructive"
-          });
-        }
       }
     } catch (error) {
       console.error("Unexpected login error:", error);
