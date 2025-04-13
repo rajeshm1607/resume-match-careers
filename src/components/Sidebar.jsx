@@ -100,12 +100,12 @@ const Sidebar = () => {
       path: "/jobs",
     },
     {
-      title: "Job Admin",
+      title: "Job Admin1",
       icon: FolderCog,
       path: "/job-admin",
     },
     {
-      title: "Resume",
+      title: "Resume1",
       icon: FileText,
       path: "/resume",
     },
