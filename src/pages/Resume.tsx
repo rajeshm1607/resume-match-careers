@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -35,13 +34,11 @@ const Resume = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Fetch the latest resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
   });
 
-  // Mutation for uploading and parsing resume
   const uploadMutation = useMutation({
     mutationFn: uploadAndParseResume,
     onSuccess: (data) => {
@@ -109,7 +106,6 @@ const Resume = () => {
   };
 
   const handleDeleteResume = () => {
-    // In a real app, you would delete the resume from Supabase here
     setFile(null);
     setShowDeleteConfirm(false);
     queryClient.setQueryData(['resume'], null);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +23,8 @@ import {
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Job, searchJobs, saveJob, applyToJob } from "@/services/jobService";
-import { getLatestParsedResume, ParsedResume } from "@/services/resumeService";
+import { searchJobs, saveJob, applyToJob } from "@/services/jobService";
+import { getLatestParsedResume } from "@/services/resumeService";
 
 const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,11 +33,10 @@ const Jobs = () => {
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
   const { toast } = useToast();
   
-  // Fetch resume data - fixed to use the correct structure for useQuery
+  // Fetch resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: () => getLatestParsedResume(),
-    // Remove the onSuccess callback and use useEffect instead
   });
 
   // Use useEffect to handle the successful data fetch
