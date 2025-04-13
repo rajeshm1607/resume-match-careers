@@ -13,6 +13,7 @@ import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
 import Settings from "./pages/Settings.js";
 import NotFound from "./pages/NotFound.js";
+import JobAdmin from "./pages/JobAdmin";
 import { getSession, supabase } from "./lib/supabase";
 import { useToast } from "./components/ui/use-toast.js";
 
@@ -142,6 +143,11 @@ const App = () => {
             <Route path="/jobs" element={
               <ProtectedRoute>
                 <Jobs />
+              </ProtectedRoute>
+            } />
+            <Route path="/job-admin" element={
+              <ProtectedRoute>
+                <JobAdmin />
               </ProtectedRoute>
             } />
             <Route path="/resume" element={

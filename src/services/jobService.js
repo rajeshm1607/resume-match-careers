@@ -28,26 +28,26 @@ export const searchJobs = async (
     if (query) {
       const lowerQuery = query.toLowerCase();
       filteredJobs = filteredJobs.filter(job => 
-        job.title.toLowerCase().includes(lowerQuery) ||
-        job.company.toLowerCase().includes(lowerQuery) ||
-        job.skills.some(skill => skill.toLowerCase().includes(lowerQuery))
+        job.title?.toLowerCase().includes(lowerQuery) ||
+        job.company?.toLowerCase().includes(lowerQuery) ||
+        job.skills?.some(skill => skill.toLowerCase().includes(lowerQuery))
       );
     }
 
     if (filters.type && filters.type !== 'all') {
       filteredJobs = filteredJobs.filter(job => 
-        job.type.toLowerCase() === filters.type?.toLowerCase()
+        job.type?.toLowerCase() === filters.type?.toLowerCase()
       );
     }
 
     if (filters.location && filters.location !== 'all') {
       if (filters.location === 'remote') {
         filteredJobs = filteredJobs.filter(job => 
-          job.location.toLowerCase() === 'remote'
+          job.location?.toLowerCase() === 'remote'
         );
       } else if (filters.location === 'onsite') {
         filteredJobs = filteredJobs.filter(job => 
-          job.location.toLowerCase() !== 'remote'
+          job.location?.toLowerCase() !== 'remote'
         );
       }
     }
@@ -56,12 +56,12 @@ export const searchJobs = async (
     if (skills.length > 0) {
       filteredJobs = filteredJobs.map(job => {
         const matchingSkills = skills.filter(skill => 
-          job.skills.some(jobSkill => 
+          job.skills?.some(jobSkill => 
             jobSkill.toLowerCase().includes(skill.toLowerCase())
           )
         );
         
-        const matchScore = Math.round((matchingSkills.length / skills.length) * 100);
+        const matchScore = job.skills?.length ? Math.round((matchingSkills.length / skills.length) * 100) : 0;
         return {
           ...job,
           match: matchScore
@@ -70,10 +70,35 @@ export const searchJobs = async (
     }
 
     // Sort by match score
-    return filteredJobs.sort((a, b) => b.match - a.match);
+    return filteredJobs.sort((a, b) => (b.match || 0) - (a.match || 0));
   } catch (error) {
     console.error('Error searching jobs:', error);
     return [];
+  }
+};
+
+// Function to upload scraped jobs to Supabase
+export const uploadScrapedJobs = async (jobs) => {
+  try {
+    if (!jobs || jobs.length === 0) {
+      return { success: false, message: "No jobs to upload" };
+    }
+    
+    // Insert jobs into Supabase
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert(jobs)
+      .select();
+    
+    if (error) {
+      console.error('Error uploading jobs:', error);
+      return { success: false, message: error.message };
+    }
+    
+    return { success: true, message: `${jobs.length} jobs uploaded`, data };
+  } catch (error) {
+    console.error('Upload error:', error);
+    return { success: false, message: "An unexpected error occurred" };
   }
 };
 
