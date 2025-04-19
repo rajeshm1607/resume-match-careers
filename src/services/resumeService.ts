@@ -60,7 +60,7 @@ export const uploadAndParseResume = async (file: File): Promise<ResumeUploadResp
   }
 };
 
-// Updated to make it compatible with React Query
+// Updated to make it compatible with React Query - removed the optional userId parameter
 export const getLatestParsedResume = async (): Promise<ParsedResume | null> => {
   try {
     // In a real app, you'd filter by user ID

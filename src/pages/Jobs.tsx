@@ -25,7 +25,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { searchJobs, saveJob, applyToJob } from "@/services/jobService";
 import { getLatestParsedResume } from "@/services/resumeService";
-import { getSession } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 
 const Jobs = () => {
@@ -33,19 +33,27 @@ const Jobs = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await getSession();
-        console.log("Jobs page session check:", session ? "Authenticated" : "Not authenticated");
-        if (!session) {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          console.log("No session in Jobs page, redirecting to login");
           navigate("/login");
+          return;
         }
+        
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error("Authentication check error in Jobs:", error);
+        console.error("Authentication check error:", error);
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -54,7 +62,8 @@ const Jobs = () => {
   
   const resumeQuery = useQuery({
     queryKey: ['resume'],
-    queryFn: () => getLatestParsedResume(),
+    queryFn: getLatestParsedResume,
+    enabled: isAuthenticated,
   });
 
   useEffect(() => {
@@ -66,6 +75,7 @@ const Jobs = () => {
   const jobsQuery = useQuery({
     queryKey: ['jobs', searchQuery, filterType, filterLocation, resumeSkills],
     queryFn: () => searchJobs(searchQuery, { type: filterType, location: filterLocation }, resumeSkills),
+    enabled: isAuthenticated,
   });
 
   const saveMutation = useMutation({
@@ -111,11 +121,11 @@ const Jobs = () => {
   };
 
   const filteredJobs = jobsQuery.data || [];
-  const isLoading = jobsQuery.isLoading || resumeQuery.isLoading;
+  const isPageLoading = isLoading || jobsQuery.isLoading || resumeQuery.isLoading;
   const isError = jobsQuery.isError || resumeQuery.isError;
   const resume = resumeQuery.data;
   
-  if (isLoading) {
+  if (isPageLoading) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-[50vh]">

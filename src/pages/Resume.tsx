@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 import { useQuery } from "@tanstack/react-query";
 import { getLatestParsedResume } from "@/services/resumeService";
-import { getSession } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import UploadCard from "@/components/resume/UploadCard";
 import ResumeCard from "@/components/resume/ResumeCard";
 import ProcessingIndicator from "@/components/resume/ProcessingIndicator";
@@ -13,18 +13,26 @@ import ResumeTips from "@/components/resume/ResumeTips";
 
 const Resume = () => {
   const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await getSession();
-        console.log("Resume page session check:", session ? "Authenticated" : "Not authenticated");
-        if (!session) {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          console.log("No session in Resume page, redirecting to login");
           navigate("/login");
+          return;
         }
+        
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error("Authentication check error in Resume:", error);
+        console.error("Authentication check error:", error);
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -34,15 +42,14 @@ const Resume = () => {
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: getLatestParsedResume,
-    enabled: true,
+    enabled: isAuthenticated,
   });
 
   const isUploading = false; // This would be set based on the upload mutation status
   const resumeData = resumeQuery.data;
   const resumeUploaded = !!resumeData;
-  const isLoading = resumeQuery.isLoading;
   
-  if (isLoading) {
+  if (isLoading || resumeQuery.isLoading) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-[50vh]">

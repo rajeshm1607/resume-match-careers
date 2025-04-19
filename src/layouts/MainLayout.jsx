@@ -4,45 +4,38 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
-import { getSession, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 const MainLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await getSession();
-        console.log("MainLayout auth check:", session ? "Session found" : "No session");
-        
-        if (!session) {
-          console.log("No active session found in MainLayout, redirecting to login");
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
           setAuthenticated(false);
+          setLoading(false);
           navigate("/login");
           return;
         }
         
         setAuthenticated(true);
+        setLoading(false);
       } catch (error) {
         console.error("Authentication check error in MainLayout:", error);
         setAuthenticated(false);
-        navigate("/login");
-      } finally {
         setLoading(false);
+        navigate("/login");
       }
     };
     
-    checkAuth();
-  }, [navigate]);
-
-  // Monitor auth state changes
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change in MainLayout:", event);
         
@@ -55,8 +48,10 @@ const MainLayout = ({ children }) => {
       }
     );
     
+    checkAuth();
+    
     return () => {
-      authListener?.subscription?.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, [navigate]);
   
@@ -69,11 +64,7 @@ const MainLayout = ({ children }) => {
   }
 
   if (!authenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   return (
