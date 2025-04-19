@@ -1,5 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Resume from "./pages/Resume";
@@ -10,19 +11,31 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import UploadJobs from "./pages/admin/UploadJobs";
 
+// Create a QueryClient
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/jobs" element={<Jobs />} />
-      <Route path="/resume" element={<Resume />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/admin/upload-jobs" element={<UploadJobs />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <QueryClientProvider client={queryClient}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/resume" element={<Resume />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/admin/upload-jobs" element={<UploadJobs />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </QueryClientProvider>
   );
 }
 
