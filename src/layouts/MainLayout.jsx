@@ -77,10 +77,11 @@ const MainLayout = ({ children }) => {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
           
-          // Use setTimeout to avoid potential React Query race conditions 
+          // Use a more reliable approach for navigation after auth state change
+          // to avoid React Query issues
           setTimeout(() => {
-            navigate("/dashboard");
-          }, 0);
+            navigate("/dashboard", { replace: true });
+          }, 100);
         }
       }
     );
