@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://bbyiwqrtxmkvaowishxp.supabase.co';
@@ -8,6 +9,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true, // Enable detection of OAuth grants in URL
+    flowType: 'implicit', // Use implicit flow for better redirect handling
   }
 });
 

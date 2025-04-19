@@ -14,9 +14,11 @@ const GoogleButton = ({ onGoogleLoginError }) => {
     setGoogleLoading(true);
     
     try {
+      console.log("Starting Google login process");
       const { error } = await signInWithGoogle();
       
       if (error) {
+        console.error("Google login error:", error);
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
           // Save to localStorage to persist across pages
           localStorage.setItem("auth_provider_error", "google");
@@ -27,6 +29,14 @@ const GoogleButton = ({ onGoogleLoginError }) => {
             variant: "destructive"
           });
           onGoogleLoginError("Google login is not available. Please sign in with email and password.");
+        } else if (error.message.includes("redirect_uri_mismatch")) {
+          // This is a common error when the redirect URI is not properly configured
+          toast({
+            title: "Google login configuration error",
+            description: "The redirect URI is not properly configured in the Google Console.",
+            variant: "destructive"
+          });
+          onGoogleLoginError("Google login is not properly configured. Please contact support.");
         } else {
           toast({
             title: "Google login failed",
@@ -35,9 +45,12 @@ const GoogleButton = ({ onGoogleLoginError }) => {
           });
         }
         setGoogleLoading(false);
+      } else {
+        console.log("Google login initiated successfully - redirecting");
+        // If no error, the redirect will happen automatically via supabase
       }
-      // If no error, redirect will happen automatically
     } catch (error) {
+      console.error("Unexpected Google login error:", error);
       toast({
         title: "Login error",
         description: "An unexpected error occurred. Please try again.",

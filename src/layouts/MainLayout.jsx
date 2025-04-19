@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,8 +14,29 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
+    const handleRedirect = async () => {
+      console.log("Checking for OAuth redirect parameters in URL");
+      if (location.hash && location.hash.includes('access_token')) {
+        console.log("Found OAuth redirect in URL, processing...");
+        
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session) {
+          console.log("Successfully processed OAuth redirect, user is authenticated");
+          setAuthenticated(true);
+          setLoading(false);
+          navigate("/dashboard", { replace: true });
+          return true;
+        }
+      }
+      return false;
+    };
+    
     const checkAuth = async () => {
       try {
+        const isRedirect = await handleRedirect();
+        if (isRedirect) return;
+        
         console.log("Checking authentication in MainLayout...");
         const { data } = await supabase.auth.getSession();
         
@@ -25,7 +45,6 @@ const MainLayout = ({ children }) => {
           setAuthenticated(false);
           setLoading(false);
           
-          // Only redirect if not already on login or signup page
           if (!['/login', '/signup'].includes(location.pathname)) {
             navigate("/login");
           }
@@ -40,14 +59,12 @@ const MainLayout = ({ children }) => {
         setAuthenticated(false);
         setLoading(false);
         
-        // Only redirect if not already on login or signup page
         if (!['/login', '/signup'].includes(location.pathname)) {
           navigate("/login");
         }
       }
     };
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state change in MainLayout:", event);
@@ -58,7 +75,6 @@ const MainLayout = ({ children }) => {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
-          // Use a timeout to avoid potential race conditions with auth state changes
           setTimeout(() => {
             navigate("/dashboard");
           }, 0);
@@ -71,7 +87,7 @@ const MainLayout = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, location.hash]);
   
   if (loading) {
     return (
