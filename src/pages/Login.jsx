@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
 import { getCurrentUser, getSession } from "@/lib/supabase";
 
 // Import our components
