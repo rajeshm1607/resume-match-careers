@@ -76,6 +76,7 @@ const MainLayout = ({ children }) => {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
+          
           // Use setTimeout to avoid potential React Query race conditions 
           setTimeout(() => {
             navigate("/dashboard");
