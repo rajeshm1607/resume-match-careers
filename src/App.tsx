@@ -23,7 +23,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Ensure the QueryClientProvider wraps all routes
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
