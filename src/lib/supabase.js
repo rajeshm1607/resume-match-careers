@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://bbyiwqrtxmkvaowishxp.supabase.co';
@@ -29,6 +28,7 @@ export const signInWithGoogle = async () => {
   const redirectTo = getRedirectUrl();
   console.log("Google sign-in redirect URL:", redirectTo);
   
+  // Make sure we're explicitly setting the redirectTo parameter
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -36,10 +36,12 @@ export const signInWithGoogle = async () => {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
-      }
+      },
+      skipBrowserRedirect: false, // Ensure browser redirect happens automatically
     }
   });
   
+  console.log("Google sign-in initiated:", data ? "Success" : "Failed", error);
   return { data, error };
 };
 

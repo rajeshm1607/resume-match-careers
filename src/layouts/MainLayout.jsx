@@ -17,6 +17,7 @@ const MainLayout = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("Checking authentication in MainLayout...");
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
@@ -31,6 +32,7 @@ const MainLayout = ({ children }) => {
           return;
         }
         
+        console.log("Session found in MainLayout, user is authenticated");
         setAuthenticated(true);
         setLoading(false);
       } catch (error) {
@@ -47,14 +49,19 @@ const MainLayout = ({ children }) => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state change in MainLayout:", event);
         
         if (event === 'SIGNED_OUT') {
           setAuthenticated(false);
           navigate("/login");
         } else if (event === 'SIGNED_IN' && session) {
+          console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
+          // Use a timeout to avoid potential race conditions with auth state changes
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 0);
         }
       }
     );
