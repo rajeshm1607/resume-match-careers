@@ -16,16 +16,12 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 const getRedirectUrl = () => {
   // Get the current origin - this will be the preview or production URL in those environments
   const currentOrigin = window.location.origin;
+  console.log("Current origin for redirect:", currentOrigin);
   
-  // Make sure we're not using localhost in preview/production environments
-  if (currentOrigin.includes('localhost')) {
-    // For local development
-    return `${currentOrigin}/dashboard`;
-  } else {
-    // For preview/production environments
-    console.log("Using deployed redirect URL:", `${currentOrigin}/dashboard`);
-    return `${currentOrigin}/dashboard`;
-  }
+  // Always use the current origin for redirects
+  const redirectUrl = `${currentOrigin}/dashboard`;
+  console.log("Using redirect URL:", redirectUrl);
+  return redirectUrl;
 };
 
 // Auth helpers
