@@ -12,15 +12,22 @@ const MainLayout = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const location = useLocation();
   
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
+        
         if (!data.session) {
+          console.log("No session in MainLayout, redirecting to login");
           setAuthenticated(false);
           setLoading(false);
-          navigate("/login");
+          
+          // Only redirect if not already on login or signup page
+          if (!['/login', '/signup'].includes(location.pathname)) {
+            navigate("/login");
+          }
           return;
         }
         
@@ -30,7 +37,11 @@ const MainLayout = ({ children }) => {
         console.error("Authentication check error in MainLayout:", error);
         setAuthenticated(false);
         setLoading(false);
-        navigate("/login");
+        
+        // Only redirect if not already on login or signup page
+        if (!['/login', '/signup'].includes(location.pathname)) {
+          navigate("/login");
+        }
       }
     };
     
@@ -53,7 +64,7 @@ const MainLayout = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
   
   if (loading) {
     return (
