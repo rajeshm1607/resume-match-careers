@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -75,6 +76,7 @@ const MainLayout = ({ children }) => {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
+          // Use setTimeout to avoid potential React Query race conditions 
           setTimeout(() => {
             navigate("/dashboard");
           }, 0);

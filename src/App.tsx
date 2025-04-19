@@ -11,17 +11,19 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import UploadJobs from "./pages/admin/UploadJobs";
 
-// Create a QueryClient
+// Create a QueryClient with proper configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false, // Disable refetch on window focus for better UX
     },
   },
 });
 
 function App() {
+  // Ensure the QueryClientProvider wraps all routes
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>

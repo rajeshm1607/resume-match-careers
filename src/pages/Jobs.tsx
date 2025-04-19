@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,8 +36,6 @@ const Jobs = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Skip the separate isLoading state since we can use the loading states from React Query
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -125,7 +122,6 @@ const Jobs = () => {
   const isError = jobsQuery.isError || resumeQuery.isError;
   const resume = resumeQuery.data;
   
-  // Use MainLayout to handle authentication checking
   return (
     <MainLayout>
       {isPageLoading ? (
