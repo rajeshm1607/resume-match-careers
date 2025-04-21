@@ -93,13 +93,15 @@ const MainLayout = ({ children }) => {
     
     checkAuth();
     
-    // Debug any query client issues
+    // Debug any query client issues - making sure all objects exist before accessing them
     if (DEBUG && queryClient) {
+      const queryCache = queryClient.getQueryCache();
       console.log("MainLayout - QueryClient check:", {
         exists: !!queryClient,
-        // Safely access queries if queryClient exists and has a queryCache
-        queries: queryClient && queryClient.getQueryCache() ? 
-          Object.keys(queryClient.getQueryCache().queries || {}).length : 
+        hasQueryCache: !!queryCache,
+        // Safely access queries if queryCache exists and has a queries property
+        queries: queryCache && queryCache.queries ? 
+          Object.keys(queryCache.queries).length : 
           'N/A',
       });
     }
