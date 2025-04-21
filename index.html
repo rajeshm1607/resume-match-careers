@@ -16,12 +16,27 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Block Cloudflare Analytics -->
+    <meta name="cf-2025-turnstile-off" content="true" />
+    <meta name="cf-2025-beacon-off" content="true" />
+    <meta name="cloudflare-analytics" content="off" />
+    
+    <!-- Load CSS and JS after blocking analytics -->
     <script type="module" crossorigin src="/assets/index-DQY0IOxh.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-efgms_xU.css" />
     
-    <!-- Disable Cloudflare Analytics -->
-    <meta name="cf-2025-turnstile-off" content="true" />
-    <meta name="cf-2025-beacon-off" content="true" />
+    <!-- Additional script to block Cloudflare analytics -->
+    <script>
+      // Block Cloudflare beacon script
+      window.__cfBeaconDisabled = true;
+      
+      // Remove any existing beacon scripts
+      document.addEventListener('DOMContentLoaded', function() {
+        const beaconScripts = document.querySelectorAll('script[src*="beacon.min.js"]');
+        beaconScripts.forEach(script => script.remove());
+      });
+    </script>
   </head>
 
   <body>

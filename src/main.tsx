@@ -8,6 +8,12 @@ import { Toaster } from "@/components/ui/toaster";
 // Add console log for source mapping help
 console.log("main.tsx: Initializing application");
 
+// Block Cloudflare analytics
+if (window) {
+  // @ts-ignore
+  window.__cfBeaconDisabled = true;
+}
+
 // Make sure we have a root element
 const rootElement = document.getElementById("root");
 if (!rootElement) {
