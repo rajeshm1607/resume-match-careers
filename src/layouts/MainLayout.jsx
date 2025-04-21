@@ -47,7 +47,7 @@ const MainLayout = ({ children }) => {
           setLoading(false);
           
           if (!['/login', '/signup'].includes(location.pathname)) {
-            navigate("/login");
+            navigate("/login", { replace: true });
           }
           return;
         }
@@ -61,7 +61,7 @@ const MainLayout = ({ children }) => {
         setLoading(false);
         
         if (!['/login', '/signup'].includes(location.pathname)) {
-          navigate("/login");
+          navigate("/login", { replace: true });
         }
       }
     };
@@ -72,7 +72,7 @@ const MainLayout = ({ children }) => {
         
         if (event === 'SIGNED_OUT') {
           setAuthenticated(false);
-          navigate("/login");
+          navigate("/login", { replace: true });
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
@@ -81,7 +81,7 @@ const MainLayout = ({ children }) => {
           // to avoid React Query issues
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
-          }, 100);
+          }, 150); // Increase timeout to ensure React Query is properly initialized
         }
       }
     );
