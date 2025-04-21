@@ -15,30 +15,29 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
-    const handleRedirect = async () => {
-      console.log("Checking for OAuth redirect parameters in URL");
-      if (location.hash && location.hash.includes('access_token')) {
-        console.log("Found OAuth redirect in URL, processing...");
+    // First, set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth state change in MainLayout:", event);
         
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          console.log("Successfully processed OAuth redirect, user is authenticated");
+        if (event === 'SIGNED_OUT') {
+          setAuthenticated(false);
+          navigate("/login", { replace: true });
+        } else if (event === 'SIGNED_IN' && session) {
+          console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
-          setLoading(false);
-          navigate("/dashboard", { replace: true });
-          return true;
+          
+          // Use setTimeout to avoid React Query initialization issues
+          // This ensures all necessary providers are properly set up
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 300); // Increased timeout for React Query initialization
         }
       }
-      return false;
-    };
+    );
     
     const checkAuth = async () => {
       try {
-        const isRedirect = await handleRedirect();
-        if (isRedirect) return;
-        
-        console.log("Checking authentication in MainLayout...");
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
@@ -66,32 +65,13 @@ const MainLayout = ({ children }) => {
       }
     };
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state change in MainLayout:", event);
-        
-        if (event === 'SIGNED_OUT') {
-          setAuthenticated(false);
-          navigate("/login", { replace: true });
-        } else if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, setting authenticated state");
-          setAuthenticated(true);
-          
-          // Use a more reliable approach for navigation after auth state change
-          // to avoid React Query issues
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 150); // Increase timeout to ensure React Query is properly initialized
-        }
-      }
-    );
-    
+    // Now check for auth after setting up listener
     checkAuth();
     
     return () => {
       subscription?.unsubscribe();
     };
-  }, [navigate, location.pathname, location.hash]);
+  }, [navigate, location.pathname]);
   
   if (loading) {
     return (

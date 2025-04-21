@@ -23,7 +23,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Use singleton pattern to ensure only one queryClient instance exists
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
