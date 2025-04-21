@@ -16,34 +16,42 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   const queryClient = useQueryClient();
   
-  // Debug flag for tracking render cycles
+  // Set to true for detailed debugging information
   const DEBUG = true;
   
   useEffect(() => {
-    if (DEBUG) console.log("MainLayout useEffect running, path:", location.pathname);
+    console.log("MainLayout - Component mounting, checking auth...", {
+      path: location.pathname,
+      queryClient: !!queryClient
+    });
     
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (DEBUG) console.log("Auth state change in MainLayout:", event, !!session);
+        console.log(`MainLayout - Auth state changed: ${event}`, {
+          hasSession: !!session,
+          path: location.pathname
+        });
         
         if (event === 'SIGNED_OUT') {
+          console.log("MainLayout - User signed out, redirecting to login");
           setAuthenticated(false);
           // Invalidate all queries when signing out to prevent stale data issues
           queryClient.clear();
           navigate("/login", { replace: true });
         } else if (event === 'SIGNED_IN' && session) {
-          if (DEBUG) console.log("User signed in, setting authenticated state");
+          console.log("MainLayout - User signed in, setting authenticated state");
           setAuthenticated(true);
           setLoading(false);
           
           // Only navigate if we're not already on a protected route
-          const isOnAuthPage = ['/login', '/signup'].includes(location.pathname);
+          const isOnAuthPage = ['/login', '/signup', '/'].includes(location.pathname);
           if (isOnAuthPage) {
-            // Use a small delay to ensure React Query is properly initialized
+            // Use a delay to ensure React Query is properly initialized
+            console.log("MainLayout - User on auth page, navigating to dashboard with delay");
             setTimeout(() => {
               navigate("/dashboard", { replace: true });
-            }, 100);
+            }, 500);
           }
         }
       }
@@ -52,25 +60,26 @@ const MainLayout = ({ children }) => {
     // Check for existing session
     const checkAuth = async () => {
       try {
-        if (DEBUG) console.log("Checking auth status in MainLayout...");
+        console.log("MainLayout - Checking auth status...");
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
-          if (DEBUG) console.log("No session in MainLayout, redirecting to login");
+          console.log("MainLayout - No session found, user is not authenticated");
           setAuthenticated(false);
           setLoading(false);
           
           if (!['/login', '/signup', '/'].includes(location.pathname)) {
+            console.log(`MainLayout - Redirecting from ${location.pathname} to login`);
             navigate("/login", { replace: true });
           }
           return;
         }
         
-        if (DEBUG) console.log("Session found in MainLayout, user is authenticated");
+        console.log("MainLayout - Session found, user is authenticated");
         setAuthenticated(true);
         setLoading(false);
       } catch (error) {
-        console.error("Authentication check error in MainLayout:", error);
+        console.error("MainLayout - Authentication check error:", error);
         setAuthenticated(false);
         setLoading(false);
         
@@ -82,12 +91,22 @@ const MainLayout = ({ children }) => {
     
     checkAuth();
     
+    // Debug any query client issues
+    if (DEBUG) {
+      console.log("MainLayout - QueryClient check:", {
+        exists: !!queryClient,
+        queries: queryClient ? Object.keys(queryClient.getQueryCache().queries).length : 'N/A',
+      });
+    }
+    
     return () => {
+      console.log("MainLayout - Component unmounting");
       if (subscription) subscription.unsubscribe();
     };
   }, [navigate, location.pathname, queryClient]);
   
   if (loading) {
+    console.log("MainLayout - Still loading, showing spinner");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -97,14 +116,17 @@ const MainLayout = ({ children }) => {
 
   // For authentication pages or the home page, don't require authentication
   if (!authenticated && ['/login', '/signup', '/'].includes(location.pathname)) {
+    console.log(`MainLayout - Rendering non-authenticated route: ${location.pathname}`);
     return children;
   }
 
   // For other pages, require authentication
   if (!authenticated) {
+    console.log(`MainLayout - Not authenticated, blocking access to: ${location.pathname}`);
     return null;
   }
 
+  console.log(`MainLayout - Rendering authenticated layout for: ${location.pathname}`);
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">

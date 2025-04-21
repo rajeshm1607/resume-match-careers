@@ -22,14 +22,28 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true, // Refetch on reconnect
     },
   },
+  logger: {
+    log: (message) => {
+      console.log(`[React Query]: ${message}`);
+    },
+    warn: (message) => {
+      console.warn(`[React Query Warning]: ${message}`);
+    },
+    error: (message) => {
+      console.error(`[React Query Error]: ${message}`);
+    },
+  },
 });
 
-console.log("App.tsx: QueryClient initialized");
+console.log("App.tsx: QueryClient initialized with ID:", queryClient.getQueryCache().config.queryHash);
 
 function App() {
-  console.log("App.tsx: Rendering App component");
+  console.log("App.tsx: Rendering App component with QueryClient:", !!queryClient);
   return (
     <QueryClientProvider client={queryClient}>
+      <div className="debug-info" style={{ display: 'none' }} data-debug="true" data-query-client-id={queryClient.getQueryCache().config.queryHash}>
+        {/* Hidden debug element to help identify QueryClient in React DevTools */}
+      </div>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />} />

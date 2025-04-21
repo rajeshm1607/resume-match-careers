@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -18,5 +19,14 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    minify: false, // Disable minification for all builds
+    sourcemap: true, // Generate source maps
+    rollupOptions: {
+      output: {
+        manualChunks: undefined, // Disable code splitting to make debugging easier
+      }
+    }
   },
 }));
