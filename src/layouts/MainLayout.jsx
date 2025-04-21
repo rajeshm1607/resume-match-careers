@@ -15,7 +15,9 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
-    // First, set up the auth state listener
+    console.log("MainLayout useEffect running...");
+    
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state change in MainLayout:", event);
@@ -27,17 +29,18 @@ const MainLayout = ({ children }) => {
           console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
           
-          // Use setTimeout to avoid React Query initialization issues
-          // This ensures all necessary providers are properly set up
+          // Let the React render cycle complete before navigation
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
-          }, 300); // Increased timeout for React Query initialization
+          }, 500); // Increased timeout for React Query initialization
         }
       }
     );
     
+    // Then check for existing session
     const checkAuth = async () => {
       try {
+        console.log("Checking auth status in MainLayout...");
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
@@ -65,7 +68,6 @@ const MainLayout = ({ children }) => {
       }
     };
     
-    // Now check for auth after setting up listener
     checkAuth();
     
     return () => {

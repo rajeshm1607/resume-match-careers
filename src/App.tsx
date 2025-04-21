@@ -11,13 +11,15 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import UploadJobs from "./pages/admin/UploadJobs";
 
-// Create a QueryClient with proper configuration
+// Create a QueryClient with proper configuration - defined outside the component to ensure singleton
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false, // Disable refetch on window focus for better UX
+      refetchOnMount: true, // Ensure data is fresh when component mounts
+      refetchOnReconnect: true, // Refetch on reconnect
     },
   },
 });
