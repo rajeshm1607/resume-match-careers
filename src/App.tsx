@@ -24,7 +24,10 @@ const queryClient = new QueryClient({
   },
 });
 
+console.log("App.tsx: QueryClient initialized");
+
 function App() {
+  console.log("App.tsx: Rendering App component");
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>

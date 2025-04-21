@@ -1,32 +1,46 @@
 
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getSession } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Settings = () => {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await getSession();
-        setAuthenticated(!!session);
+        console.log("Checking auth status in Settings page...");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const hasSession = !!sessionData.session;
+        
+        console.log("Settings page - User authenticated:", hasSession);
+        setIsAuthenticated(hasSession);
+        setIsPageLoading(false);
       } catch (error) {
-        console.error("Error checking authentication:", error);
-      } finally {
-        setLoading(false);
+        console.error("Authentication check error in Settings page:", error);
+        setIsAuthenticated(false);
+        setIsPageLoading(false);
       }
     };
     
     checkAuth();
   }, []);
 
-  if (loading) return null;
-  if (!authenticated) return <Navigate to="/login" />;
+  if (isPageLoading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

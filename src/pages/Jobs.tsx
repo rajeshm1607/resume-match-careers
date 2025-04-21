@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +23,10 @@ import {
   Loader2
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { searchJobs, saveJob, applyToJob } from "@/services/jobService";
 import { getLatestParsedResume } from "@/services/resumeService";
 import { supabase } from "@/lib/supabase";
-import { useNavigate } from "react-router-dom";
 
 const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,46 +35,58 @@ const Jobs = () => {
   const [resumeSkills, setResumeSkills] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
+  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          console.log("No session in Jobs page, redirecting to login");
-          navigate("/login");
-          return;
-        }
+        console.log("Checking auth status in Jobs page...");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const hasSession = !!sessionData.session;
         
-        setIsAuthenticated(true);
+        console.log("Jobs page - User authenticated:", hasSession);
+        setIsAuthenticated(hasSession);
+        setIsInitialLoading(false);
       } catch (error) {
-        console.error("Authentication check error:", error);
-        navigate("/login");
+        console.error("Authentication check error in Jobs page:", error);
+        setIsAuthenticated(false);
+        setIsInitialLoading(false);
       }
     };
     
     checkAuth();
-  }, [navigate]);
+  }, []);
   
+  // Query for resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: getLatestParsedResume,
     enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
+  // Update resume skills when resume data changes
   useEffect(() => {
     if (resumeQuery.data && resumeQuery.data.skills) {
+      console.log("Resume skills loaded:", resumeQuery.data.skills.length);
       setResumeSkills(resumeQuery.data.skills);
     }
   }, [resumeQuery.data]);
 
+  // Query for jobs data
   const jobsQuery = useQuery({
     queryKey: ['jobs', searchQuery, filterType, filterLocation, resumeSkills],
     queryFn: () => searchJobs(searchQuery, { type: filterType, location: filterLocation }, resumeSkills),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isInitialLoading,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
   });
 
+  // Mutation for saving jobs
   const saveMutation = useMutation({
     mutationFn: saveJob,
     onSuccess: () => {
@@ -92,6 +104,7 @@ const Jobs = () => {
     }
   });
 
+  // Mutation for applying to jobs
   const applyMutation = useMutation({
     mutationFn: applyToJob,
     onSuccess: () => {
@@ -118,9 +131,19 @@ const Jobs = () => {
   };
 
   const filteredJobs = jobsQuery.data || [];
-  const isPageLoading = !isAuthenticated || jobsQuery.isLoading || resumeQuery.isLoading;
+  const isPageLoading = isInitialLoading || jobsQuery.isLoading || resumeQuery.isLoading;
   const isError = jobsQuery.isError || resumeQuery.isError;
   const resume = resumeQuery.data;
+  
+  console.log("Jobs page rendering state:", {
+    isAuthenticated,
+    isInitialLoading,
+    jobsLoading: jobsQuery.isLoading,
+    resumeLoading: resumeQuery.isLoading,
+    jobsError: jobsQuery.isError,
+    resumeError: resumeQuery.isError,
+    jobsCount: filteredJobs.length
+  });
   
   return (
     <MainLayout>
@@ -223,7 +246,7 @@ const Jobs = () => {
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2 mb-3">
-                            {job.skills.map((skill) => (
+                            {job.skills && job.skills.map((skill) => (
                               <Badge 
                                 key={skill} 
                                 variant={resumeSkills.includes(skill) ? "default" : "outline"}

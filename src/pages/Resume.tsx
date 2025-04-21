@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getLatestParsedResume } from "@/services/resumeService";
 import { supabase } from "@/lib/supabase";
 import UploadCard from "@/components/resume/UploadCard";
@@ -13,43 +12,56 @@ import ResumeTips from "@/components/resume/ResumeTips";
 
 const Resume = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
+  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          console.log("No session in Resume page, redirecting to login");
-          navigate("/login");
-          return;
-        }
+        console.log("Checking auth status in Resume page...");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const hasSession = !!sessionData.session;
         
-        setIsAuthenticated(true);
+        console.log("Resume page - User authenticated:", hasSession);
+        setIsAuthenticated(hasSession);
+        setIsPageLoading(false);
       } catch (error) {
-        console.error("Authentication check error:", error);
-        navigate("/login");
-      } finally {
-        setIsLoading(false);
+        console.error("Authentication check error in Resume page:", error);
+        setIsAuthenticated(false);
+        setIsPageLoading(false);
       }
     };
     
     checkAuth();
-  }, [navigate]);
+  }, []);
   
+  // Query for resume data
   const resumeQuery = useQuery({
     queryKey: ['resume'],
     queryFn: getLatestParsedResume,
     enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const isUploading = false; // This would be set based on the upload mutation status
   const resumeData = resumeQuery.data;
   const resumeUploaded = !!resumeData;
   
-  if (isLoading || resumeQuery.isLoading) {
+  const isLoading = isPageLoading || resumeQuery.isLoading;
+  
+  console.log("Resume page rendering state:", {
+    isAuthenticated,
+    isPageLoading,
+    resumeLoading: resumeQuery.isLoading,
+    resumeUploaded,
+    hasData: !!resumeData
+  });
+  
+  if (isLoading) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-[50vh]">

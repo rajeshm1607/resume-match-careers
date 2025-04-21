@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MainLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -13,48 +14,59 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  
+  // Debug flag for tracking render cycles
+  const DEBUG = true;
   
   useEffect(() => {
-    console.log("MainLayout useEffect running...");
+    if (DEBUG) console.log("MainLayout useEffect running, path:", location.pathname);
     
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth state change in MainLayout:", event);
+        if (DEBUG) console.log("Auth state change in MainLayout:", event, !!session);
         
         if (event === 'SIGNED_OUT') {
           setAuthenticated(false);
+          // Invalidate all queries when signing out to prevent stale data issues
+          queryClient.clear();
           navigate("/login", { replace: true });
         } else if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in, setting authenticated state");
+          if (DEBUG) console.log("User signed in, setting authenticated state");
           setAuthenticated(true);
+          setLoading(false);
           
-          // Let the React render cycle complete before navigation
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 500); // Increased timeout for React Query initialization
+          // Only navigate if we're not already on a protected route
+          const isOnAuthPage = ['/login', '/signup'].includes(location.pathname);
+          if (isOnAuthPage) {
+            // Use a small delay to ensure React Query is properly initialized
+            setTimeout(() => {
+              navigate("/dashboard", { replace: true });
+            }, 100);
+          }
         }
       }
     );
     
-    // Then check for existing session
+    // Check for existing session
     const checkAuth = async () => {
       try {
-        console.log("Checking auth status in MainLayout...");
+        if (DEBUG) console.log("Checking auth status in MainLayout...");
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
-          console.log("No session in MainLayout, redirecting to login");
+          if (DEBUG) console.log("No session in MainLayout, redirecting to login");
           setAuthenticated(false);
           setLoading(false);
           
-          if (!['/login', '/signup'].includes(location.pathname)) {
+          if (!['/login', '/signup', '/'].includes(location.pathname)) {
             navigate("/login", { replace: true });
           }
           return;
         }
         
-        console.log("Session found in MainLayout, user is authenticated");
+        if (DEBUG) console.log("Session found in MainLayout, user is authenticated");
         setAuthenticated(true);
         setLoading(false);
       } catch (error) {
@@ -62,7 +74,7 @@ const MainLayout = ({ children }) => {
         setAuthenticated(false);
         setLoading(false);
         
-        if (!['/login', '/signup'].includes(location.pathname)) {
+        if (!['/login', '/signup', '/'].includes(location.pathname)) {
           navigate("/login", { replace: true });
         }
       }
@@ -71,9 +83,9 @@ const MainLayout = ({ children }) => {
     checkAuth();
     
     return () => {
-      subscription?.unsubscribe();
+      if (subscription) subscription.unsubscribe();
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, queryClient]);
   
   if (loading) {
     return (
@@ -83,6 +95,12 @@ const MainLayout = ({ children }) => {
     );
   }
 
+  // For authentication pages or the home page, don't require authentication
+  if (!authenticated && ['/login', '/signup', '/'].includes(location.pathname)) {
+    return children;
+  }
+
+  // For other pages, require authentication
   if (!authenticated) {
     return null;
   }
