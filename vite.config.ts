@@ -11,7 +11,12 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      // Enhanced source map configuration for React
+      devTools: {
+        autoRegistration: true,
+      },
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -29,8 +34,14 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
-  // Force full source maps even in development
+  // Enhanced development configuration
   css: {
     devSourcemap: true,
+  },
+  // Explicitly enable source maps in all modes
+  optimizeDeps: {
+    esbuildOptions: {
+      sourcemap: true,
+    },
   },
 }));

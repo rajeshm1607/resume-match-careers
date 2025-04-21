@@ -31,6 +31,7 @@ if (process.env.NODE_ENV === 'development') {
   if (window) {
     console.log("App.tsx: Current environment:", process.env.NODE_ENV);
     console.log("App.tsx: Window object available:", !!window);
+    console.log("App.tsx: Source maps enabled check"); // This comment helps locate this file in dev tools
   }
 }
 
@@ -55,5 +56,8 @@ function App() {
     </QueryClientProvider>
   );
 }
+
+// This helps with source map debugging
+console.log("App.tsx module loaded");
 
 export default App;
