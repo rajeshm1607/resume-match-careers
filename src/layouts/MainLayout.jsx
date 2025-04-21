@@ -37,7 +37,9 @@ const MainLayout = ({ children }) => {
           console.log("MainLayout - User signed out, redirecting to login");
           setAuthenticated(false);
           // Invalidate all queries when signing out to prevent stale data issues
-          queryClient.clear();
+          if (queryClient) {
+            queryClient.clear();
+          }
           navigate("/login", { replace: true });
         } else if (event === 'SIGNED_IN' && session) {
           console.log("MainLayout - User signed in, setting authenticated state");
@@ -92,10 +94,13 @@ const MainLayout = ({ children }) => {
     checkAuth();
     
     // Debug any query client issues
-    if (DEBUG) {
+    if (DEBUG && queryClient) {
       console.log("MainLayout - QueryClient check:", {
         exists: !!queryClient,
-        queries: queryClient ? Object.keys(queryClient.getQueryCache().queries).length : 'N/A',
+        // Safely access queries if queryClient exists and has a queryCache
+        queries: queryClient && queryClient.getQueryCache() ? 
+          Object.keys(queryClient.getQueryCache().queries || {}).length : 
+          'N/A',
       });
     }
     
