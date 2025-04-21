@@ -38,7 +38,11 @@ const MainLayout = ({ children }) => {
           setAuthenticated(false);
           // Invalidate all queries when signing out to prevent stale data issues
           if (queryClient) {
-            queryClient.clear();
+            try {
+              queryClient.clear();
+            } catch (e) {
+              console.error("Error clearing query client:", e);
+            }
           }
           navigate("/login", { replace: true });
         } else if (event === 'SIGNED_IN' && session) {
@@ -95,15 +99,21 @@ const MainLayout = ({ children }) => {
     
     // Debug any query client issues - making sure all objects exist before accessing them
     if (DEBUG && queryClient) {
-      const queryCache = queryClient.getQueryCache();
-      console.log("MainLayout - QueryClient check:", {
-        exists: !!queryClient,
-        hasQueryCache: !!queryCache,
-        // Safely access queries if queryCache exists and has a queries property
-        queries: queryCache && queryCache.queries ? 
-          Object.keys(queryCache.queries).length : 
-          'N/A',
-      });
+      try {
+        // Safely get the query cache
+        const queryCache = queryClient ? queryClient.getQueryCache() : null;
+        
+        console.log("MainLayout - QueryClient check:", {
+          exists: !!queryClient,
+          hasQueryCache: !!queryCache,
+          // Safely access queries if queryCache exists and has a queries property
+          queries: queryCache && queryCache.queries ? 
+            typeof queryCache.queries === 'object' ? Object.keys(queryCache.queries).length : 'Not an object' : 
+            'N/A',
+        });
+      } catch (e) {
+        console.error("Error accessing queryClient:", e);
+      }
     }
     
     return () => {

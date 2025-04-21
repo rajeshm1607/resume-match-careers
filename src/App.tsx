@@ -26,7 +26,12 @@ const queryClient = new QueryClient({
 
 // Debug logging for development
 if (process.env.NODE_ENV === 'development') {
-  console.log("App.tsx: QueryClient initialized");
+  console.log("App.tsx: QueryClient initialized", queryClient);
+  // Force source map usage
+  if (window) {
+    console.log("App.tsx: Current environment:", process.env.NODE_ENV);
+    console.log("App.tsx: Window object available:", !!window);
+  }
 }
 
 function App() {

@@ -21,12 +21,16 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    minify: false, // Explicitly disable minification
-    sourcemap: true, // Generate source maps for easier debugging
+    minify: false, // Completely disable minification
+    sourcemap: true, // Always generate source maps
     rollupOptions: {
       output: {
-        manualChunks: undefined, // Disable code splitting for easier debugging
+        manualChunks: undefined, // Disable code splitting
       }
     }
+  },
+  // Force full source maps even in development
+  css: {
+    devSourcemap: true,
   },
 }));
