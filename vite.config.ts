@@ -11,12 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      // Enhanced source map configuration for React
-      devTools: {
-        autoRegistration: true,
-      },
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
